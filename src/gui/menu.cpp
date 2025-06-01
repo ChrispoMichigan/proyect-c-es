@@ -10,20 +10,20 @@ typedef struct {
     int is_active;
 } MenuItem;
 
+// Colores personalizados para un mejor aspecto
+const int MENU_BG_COLOR = COLOR(60, 80, 120);
+const int MENU_ITEM_COLOR = COLOR(80, 100, 140);
+const int MENU_ITEM_ACTIVE = COLOR(100, 130, 180);
+const int MENU_TEXT_COLOR = COLOR(240, 240, 240);
+const int SUBMENU_BG_COLOR = COLOR(240, 240, 245);
+const int SUBMENU_TEXT_COLOR = COLOR(40, 40, 40);
+const int SUBMENU_HIGHLIGHT = COLOR(210, 225, 245);
+
 // Menú principal
 MenuItem main_menu[] = {
-    {"Archivo", 10, 5, 80, 30, 0},
     {"Datos", 90, 5, 160, 30, 0},
     {"Graficos", 170, 5, 240, 30, 0},
     {"Ayuda", 250, 5, 320, 30, 0}
-};
-
-// Submenú para Archivo
-MenuItem file_submenu[] = {
-    {"Nuevo", 10, 35, 120, 60, 0},
-    {"Abrir...", 10, 65, 120, 90, 0},
-    {"Guardar", 10, 95, 120, 120, 0},
-    {"Salir", 10, 125, 120, 150, 0}
 };
 
 // Submenú para Datos
@@ -48,23 +48,33 @@ void draw_menu() {
     int i;
     
     // Área de fondo del menú
-    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    setfillstyle(SOLID_FILL, MENU_BG_COLOR);
     bar(0, 0, WINDOW_WIDTH, 35);
-    setcolor(BLACK);
+    setcolor(DARKGRAY);
     line(0, 35, WINDOW_WIDTH, 35);
     
     // Dibujar elementos de menú principal
-    setcolor(BLACK);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    setcolor(MENU_TEXT_COLOR);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
     settextjustify(LEFT_TEXT, CENTER_TEXT);
     
     for (i = 0; i < sizeof(main_menu) / sizeof(MenuItem); i++) {
         if (main_menu[i].is_active) {
-            setfillstyle(SOLID_FILL, WHITE);
-            bar(main_menu[i].x1, main_menu[i].y1, 
-                main_menu[i].x2, main_menu[i].y2);
+            setfillstyle(SOLID_FILL, MENU_ITEM_ACTIVE);
+        } else {
+            setfillstyle(SOLID_FILL, MENU_BG_COLOR);
         }
         
+        bar(main_menu[i].x1, main_menu[i].y1, 
+            main_menu[i].x2, main_menu[i].y2);
+            
+        // Borde suave
+        setcolor(main_menu[i].is_active ? WHITE : MENU_ITEM_COLOR);
+        rectangle(main_menu[i].x1, main_menu[i].y1, 
+                 main_menu[i].x2, main_menu[i].y2);
+        
+        // Texto
+        setcolor(MENU_TEXT_COLOR);         
         outtextxy(main_menu[i].x1 + 10, 
                 (main_menu[i].y1 + main_menu[i].y2) / 2, 
                 main_menu[i].title);
@@ -77,37 +87,47 @@ void draw_menu() {
         
         // Seleccionar el submenú correspondiente
         if (active_menu == 0) {
-            submenu = file_submenu;
-            submenu_size = sizeof(file_submenu) / sizeof(MenuItem);
-        } else if (active_menu == 1) {
             submenu = data_submenu;
             submenu_size = sizeof(data_submenu) / sizeof(MenuItem);
-        } else if (active_menu == 2) {
+        } else if (active_menu == 1) {
             submenu = graph_submenu;
             submenu_size = sizeof(graph_submenu) / sizeof(MenuItem);
         }
         
         if (submenu) {
+            // Sombra del submenú para efecto 3D
+            setfillstyle(SOLID_FILL, DARKGRAY);
+            bar(submenu[0].x1 + 4, submenu[0].y1 + 4, 
+                submenu[submenu_size-1].x2 + 4, submenu[submenu_size-1].y2 + 4);
+                
             // Fondo del submenú
-            setfillstyle(SOLID_FILL, WHITE);
+            setfillstyle(SOLID_FILL, SUBMENU_BG_COLOR);
             bar(submenu[0].x1, submenu[0].y1, 
                 submenu[submenu_size-1].x2, submenu[submenu_size-1].y2);
                 
-            setcolor(BLACK);
+            setcolor(DARKGRAY);
             rectangle(submenu[0].x1, submenu[0].y1, 
                      submenu[submenu_size-1].x2, submenu[submenu_size-1].y2);
             
             // Dibujar elementos del submenú
             for (i = 0; i < submenu_size; i++) {
                 if (submenu[i].is_active) {
-                    setfillstyle(SOLID_FILL, LIGHTGRAY);
+                    setfillstyle(SOLID_FILL, SUBMENU_HIGHLIGHT);
                     bar(submenu[i].x1, submenu[i].y1, 
                         submenu[i].x2, submenu[i].y2);
                 }
                 
+                setcolor(SUBMENU_TEXT_COLOR);
                 outtextxy(submenu[i].x1 + 10, 
                         (submenu[i].y1 + submenu[i].y2) / 2, 
                         submenu[i].title);
+                        
+                // Línea separadora sutil entre opciones
+                if (i < submenu_size - 1) {
+                    setcolor(LIGHTGRAY);
+                    line(submenu[i].x1 + 5, submenu[i].y2, 
+                         submenu[i].x2 - 5, submenu[i].y2);
+                }
             }
         }
     }
@@ -149,12 +169,9 @@ int handle_menu_click(int x, int y) {
         
         // Seleccionar el submenú correspondiente
         if (active_menu == 0) {
-            submenu = file_submenu;
-            submenu_size = sizeof(file_submenu) / sizeof(MenuItem);
-        } else if (active_menu == 1) {
             submenu = data_submenu;
             submenu_size = sizeof(data_submenu) / sizeof(MenuItem);
-        } else if (active_menu == 2) {
+        } else if (active_menu == 1) {
             submenu = graph_submenu;
             submenu_size = sizeof(graph_submenu) / sizeof(MenuItem);
         }

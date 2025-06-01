@@ -4,8 +4,8 @@
 #include <graphics.h>
 
 // Constantes generales
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
 #define MAX_DATA_POINTS 1000
 #define MAX_FILENAME_LEN 256
 

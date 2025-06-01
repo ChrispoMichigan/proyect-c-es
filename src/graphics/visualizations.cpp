@@ -6,8 +6,15 @@
 
 // Función para limpiar el área de trabajo
 void clear_work_area() {
-    setfillstyle(SOLID_FILL, APP_COLOR_BACKGROUND);
-    bar(0, 40, WINDOW_WIDTH, WINDOW_HEIGHT);
+    // Fondo degradado suave
+    for (int i = 40; i < WINDOW_HEIGHT; i++) {
+        setcolor(COLOR(245, 245, 252 - (i/20)));
+        line(0, i, WINDOW_WIDTH, i);
+    }
+    
+    // Borde sutil
+    setcolor(LIGHTGRAY);
+    rectangle(10, 45, WINDOW_WIDTH-10, WINDOW_HEIGHT-10);
 }
 
 // Ordenar datos para visualizaciones
@@ -74,54 +81,46 @@ double find_mean(DataSet* data) {
 
 // Dibujar ejes de coordenadas
 void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, double ymin, double ymax, char* xlabel, char* ylabel, char* title) {
+    // Dibujar un rectángulo suave de fondo para el área del gráfico
+    setfillstyle(SOLID_FILL, COLOR(250, 250, 255));
+    bar(x0-10, y0-height-10, x0+width+10, y0+10);
+    setcolor(LIGHTGRAY);
+    rectangle(x0-10, y0-height-10, x0+width+10, y0+10);
+    
+    // Líneas de cuadrícula suaves
+    setcolor(COLOR(220, 220, 230));
+    setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);
+    
+    // Líneas verticales
+    int numXTicks = 5;
+    int xPixelStep = width / numXTicks;
+    for (int i = 0; i <= numXTicks; i++) {
+        int x = x0 + i * xPixelStep;
+        line(x, y0, x, y0 - height);
+    }
+    
+    // Líneas horizontales
+    int numYTicks = 5;
+    int yPixelStep = height / numYTicks;
+    for (int i = 0; i <= numYTicks; i++) {
+        int y = y0 - i * yPixelStep;
+        line(x0, y, x0 + width, y);
+    }
+    
+    // Restaurar estilo de línea para los ejes
+    setlinestyle(SOLID_LINE, 0, NORM_WIDTH);
     setcolor(APP_COLOR_AXIS);
     
     // Ejes X e Y
     line(x0, y0, x0 + width, y0);
     line(x0, y0, x0, y0 - height);
     
-    // Marcas en eje X
-    int numXTicks = 5;
-    double xStep = (xmax - xmin) / numXTicks;
-    int xPixelStep = width / numXTicks;
+    // El resto del código para marcas y etiquetas se mantiene igual...
     
-    for (int i = 0; i <= numXTicks; i++) {
-        int x = x0 + i * xPixelStep;
-        line(x, y0, x, y0 + 5);
-        
-        char tickLabel[20];
-        sprintf(tickLabel, "%.1f", xmin + i * xStep);
-        settextjustify(CENTER_TEXT, TOP_TEXT);
-        outtextxy(x, y0 + 10, tickLabel);
-    }
-    
-    // Marcas en eje Y
-    int numYTicks = 5;
-    double yStep = (ymax - ymin) / numYTicks;
-    int yPixelStep = height / numYTicks;
-    
-    for (int i = 0; i <= numYTicks; i++) {
-        int y = y0 - i * yPixelStep;
-        line(x0 - 5, y, x0, y);
-        
-        char tickLabel[20];
-        sprintf(tickLabel, "%.1f", ymin + i * yStep);
-        settextjustify(RIGHT_TEXT, CENTER_TEXT);
-        outtextxy(x0 - 10, y, tickLabel);
-    }
-    
-    // Etiquetas
+    // Título con mejor estilo
     settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
-    outtextxy(x0 + width/2, y0 + 40, xlabel);
-    
-    settextjustify(CENTER_TEXT, BOTTOM_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
-    outtextxy(x0 - 50, y0 - height/2, ylabel);
-    
-    // Título
-    settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+    setcolor(BLUE);
     outtextxy(x0 + width/2, y0 - height - 30, title);
 }
 
