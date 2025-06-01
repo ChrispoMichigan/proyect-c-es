@@ -6,15 +6,15 @@
 
 // Función para limpiar el área de trabajo
 void clear_work_area() {
-    // Fondo degradado suave
+    // Fondo degradado suave - optimizado para 640x480
     for (int i = 40; i < WINDOW_HEIGHT; i++) {
-        setcolor(COLOR(245, 245, 252 - (i/20)));
+        setcolor(COLOR(245, 245, 252 - (i/10)));  // Ajustado divisor para mejor degradado
         line(0, i, WINDOW_WIDTH, i);
     }
     
     // Borde sutil
     setcolor(LIGHTGRAY);
-    rectangle(10, 45, WINDOW_WIDTH-10, WINDOW_HEIGHT-10);
+    rectangle(5, 45, WINDOW_WIDTH-5, WINDOW_HEIGHT-5);  // Reducido margen de 10 a 5
 }
 
 // Ordenar datos para visualizaciones
@@ -79,28 +79,28 @@ double find_mean(DataSet* data) {
     return sum / data->count;
 }
 
-// Dibujar ejes de coordenadas
+// Dibujar ejes de coordenadas - ajustado para resolución menor
 void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, double ymin, double ymax, char* xlabel, char* ylabel, char* title) {
     // Dibujar un rectángulo suave de fondo para el área del gráfico
     setfillstyle(SOLID_FILL, COLOR(250, 250, 255));
-    bar(x0-10, y0-height-10, x0+width+10, y0+10);
+    bar(x0-5, y0-height-5, x0+width+5, y0+5);  // Reducido margen de 10 a 5
     setcolor(LIGHTGRAY);
-    rectangle(x0-10, y0-height-10, x0+width+10, y0+10);
+    rectangle(x0-5, y0-height-5, x0+width+5, y0+5);
     
     // Líneas de cuadrícula suaves
     setcolor(COLOR(220, 220, 230));
     setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);
     
-    // Líneas verticales
-    int numXTicks = 5;
+    // Líneas verticales - menos líneas para evitar saturación
+    int numXTicks = 4;  // Reducido de 5 a 4
     int xPixelStep = width / numXTicks;
     for (int i = 0; i <= numXTicks; i++) {
         int x = x0 + i * xPixelStep;
         line(x, y0, x, y0 - height);
     }
     
-    // Líneas horizontales
-    int numYTicks = 5;
+    // Líneas horizontales - menos líneas para evitar saturación
+    int numYTicks = 4;  // Reducido de 5 a 4
     int yPixelStep = height / numYTicks;
     for (int i = 0; i <= numYTicks; i++) {
         int y = y0 - i * yPixelStep;
@@ -115,16 +115,47 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
     line(x0, y0, x0 + width, y0);
     line(x0, y0, x0, y0 - height);
     
-    // El resto del código para marcas y etiquetas se mantiene igual...
+    // Marcas en eje X
+    for (int i = 0; i <= numXTicks; i++) {
+        int x = x0 + i * xPixelStep;
+        line(x, y0, x, y0 + 3);  // Reducido tamaño de marcas
+        
+        char tickLabel[20];
+        sprintf(tickLabel, "%.1f", xmin + i * ((xmax - xmin) / numXTicks));
+        settextjustify(CENTER_TEXT, TOP_TEXT);
+        settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
+        outtextxy(x, y0 + 4, tickLabel);
+    }
+    
+    // Marcas en eje Y
+    for (int i = 0; i <= numYTicks; i++) {
+        int y = y0 - i * yPixelStep;
+        line(x0 - 3, y, x0, y);  // Reducido tamaño de marcas
+        
+        char tickLabel[20];
+        sprintf(tickLabel, "%.1f", ymin + i * ((ymax - ymin) / numYTicks));
+        settextjustify(RIGHT_TEXT, CENTER_TEXT);
+        settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
+        outtextxy(x0 - 4, y, tickLabel);
+    }
+    
+    // Etiquetas
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
+    outtextxy(x0 + width/2, y0 + 20, xlabel);  // Reducido espacio vertical
+    
+    settextjustify(CENTER_TEXT, BOTTOM_TEXT);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
+    outtextxy(x0 - 25, y0 - height/2, ylabel);  // Reducido espacio horizontal
     
     // Título con mejor estilo
     settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);  // Tamaño reducido
     setcolor(BLUE);
-    outtextxy(x0 + width/2, y0 - height - 30, title);
+    outtextxy(x0 + width/2, y0 - height - 15, title);  // Reducido espacio vertical
 }
 
-// Visualización de diagrama de tallos y hojas
+// Visualización de diagrama de tallos y hojas - ajustado para resolución menor
 void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -136,7 +167,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     
     // Título
     setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);  // Tamaño reducido
     settextjustify(CENTER_TEXT, TOP_TEXT);
     outtextxy(WINDOW_WIDTH/2, 50, (char*)"Diagrama de Tallos y Hojas");
     
@@ -161,20 +192,21 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
         sprintf(legend, "Tallo: 10^%d | Hoja: 10^%d", stem_digit, leaf_digit);
     }
     
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
-    outtextxy(WINDOW_WIDTH/2, 90, legend);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
+    outtextxy(WINDOW_WIDTH/2, 70, legend);  // Posición vertical reducida
     
     // Dibujar diagrama
     settextjustify(RIGHT_TEXT, CENTER_TEXT);
-    int y = 100;
+    int y = 90;  // Posición inicial más arriba
+    int spacing = 20;  // Espacio vertical reducido entre filas
     
     for (int stem = min_stem; stem <= max_stem; stem++) {
         char stem_str[20];
         sprintf(stem_str, "%d |", stem);
-        outtextxy(300, y, stem_str);
+        outtextxy(200, y, stem_str);  // Posición X reducida
         
         // Buscar todas las hojas para este tallo
-        int x = 310;
+        int x = 210;  // Posición X reducida
         for (int i = 0; i < data->count; i++) {
             int curr_stem = (int)(sorted[i] / stem_factor);
             if (curr_stem == stem) {
@@ -186,36 +218,33 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
                 settextjustify(LEFT_TEXT, CENTER_TEXT);
                 outtextxy(x, y, leaf_str);
                 
-                x += textwidth(leaf_str) + 5;
+                x += textwidth(leaf_str) + 3;  // Espacio horizontal reducido
             }
         }
         
-        y += 30;
+        y += spacing;  // Menos espacio entre líneas
+        
+        // Si se está saliendo de la pantalla, ajustar
+        if (y > WINDOW_HEIGHT - 100) {
+            spacing = 15;  // Reducir aún más el espaciado si hay muchos tallos
+        }
     }
     
     free(sorted);
     
-    // Estadísticas descriptivas
-    int stats_y = y + 50;
+    // Estadísticas descriptivas - compactas para pantalla pequeña
+    int stats_y = WINDOW_HEIGHT - 95;  // Posicionadas más abajo
     settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
     
     char stats[100];
-    sprintf(stats, "Numero de datos: %d", data->count);
-    outtextxy(100, stats_y, stats);
-    
-    sprintf(stats, "Minimo: %.2f", find_min(data));
-    outtextxy(100, stats_y + 25, stats);
-    
-    sprintf(stats, "Maximo: %.2f", find_max(data));
-    outtextxy(100, stats_y + 50, stats);
-    
-    sprintf(stats, "Media: %.2f", find_mean(data));
-    outtextxy(100, stats_y + 75, stats);
+    sprintf(stats, "Datos: %d | Min: %.2f | Max: %.2f | Media: %.2f", 
+            data->count, find_min(data), find_max(data), find_mean(data));
+    outtextxy(10, stats_y, stats);  // Una sola línea con toda la info
     
     // Esperar un clic para continuar
     settextjustify(LEFT_TEXT, TOP_TEXT);
-    outtextxy(100, WINDOW_HEIGHT - 50, (char*)"Clic para continuar...");
+    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
     
     while (!ismouseclick(WM_LBUTTONDOWN)) {
         delay(100);
@@ -223,7 +252,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     clearmouseclick(WM_LBUTTONDOWN);
 }
 
-// Visualización de gráfica de puntos (dispersión)
+// Visualización de gráfica de puntos (dispersión) - ajustada para resolución menor
 void plot_scatter(DataSet* data) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -233,8 +262,8 @@ void plot_scatter(DataSet* data) {
     
     clear_work_area();
     
-    // Área para el gráfico
-    int margin = 80;
+    // Área para el gráfico - márgenes reducidos para pantalla pequeña
+    int margin = 50;  // Reducido de 80 a 50
     int x0 = margin; // Origen X
     int y0 = WINDOW_HEIGHT - margin; // Origen Y
     int width = WINDOW_WIDTH - 2 * margin;
@@ -246,14 +275,14 @@ void plot_scatter(DataSet* data) {
     
     // Ajustar rango para mejor visualización
     double range = max_val - min_val;
-    min_val -= range * 0.1;
-    max_val += range * 0.1;
+    min_val -= range * 0.05;  // Reducido margen
+    max_val += range * 0.05;  // Reducido margen
     
     // Dibujar ejes
     draw_axes(x0, y0, width, height, 0, data->count, min_val, max_val, 
-              (char*)"Indice de Dato", (char*)"Valor", (char*)"Grafica de Puntos");
+              (char*)"Indice", (char*)"Valor", (char*)"Grafica de Puntos");
     
-    // Dibujar puntos
+    // Dibujar puntos - tamaño reducido para pantallas pequeñas
     setcolor(APP_COLOR_DATA_POINT);
     for (int i = 0; i < data->count; i++) {
         int x = x0 + (i * width) / data->count;
@@ -261,33 +290,23 @@ void plot_scatter(DataSet* data) {
         
         // Dibujar punto
         setfillstyle(SOLID_FILL, APP_COLOR_DATA_POINT);
-        fillellipse(x, y, 5, 5);
+        fillellipse(x, y, 3, 3);  // Tamaño reducido de 5,5 a 3,3
     }
     
-    // Mostrar estadísticas
-    int stats_y = 70;
+    // Mostrar estadísticas - compactas y en la parte superior
     settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
     setcolor(APP_COLOR_TEXT);
     
     char stats[100];
-    sprintf(stats, "Numero de datos: %d", data->count);
-    outtextxy(x0, stats_y, stats);
-    
-    sprintf(stats, "Minimo: %.2f", find_min(data));
-    outtextxy(x0, stats_y + 25, stats);
-    
-    sprintf(stats, "Maximo: %.2f", find_max(data));
-    outtextxy(x0, stats_y + 50, stats);
-    
-    sprintf(stats, "Media: %.2f", find_mean(data));
-    outtextxy(x0, stats_y + 75, stats);
+    sprintf(stats, "Datos:%d Min:%.2f Max:%.2f Media:%.2f", 
+            data->count, find_min(data), find_max(data), find_mean(data));
+    outtextxy(50, 50, stats);  // Una sola línea con toda la info
     
     // Esperar un clic para continuar
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
     settextjustify(LEFT_TEXT, TOP_TEXT);
     setcolor(APP_COLOR_TEXT);
-    outtextxy(100, WINDOW_HEIGHT - 30, (char*)"Clic para continuar...");
+    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
     
     while (!ismouseclick(WM_LBUTTONDOWN)) {
         delay(100);
@@ -295,7 +314,7 @@ void plot_scatter(DataSet* data) {
     clearmouseclick(WM_LBUTTONDOWN);
 }
 
-// Visualización de histograma
+// Visualización de histograma - ajustada para resolución menor
 void plot_histogram(DataSet* data, int num_classes) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -305,37 +324,41 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     clear_work_area();
     
-    // Diálogo para número de clases
+    // Diálogo para número de clases - ajustado para pantalla pequeña
     setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-    outtextxy(200, 100, (char*)"Numero de clases para el histograma:");
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
+    outtextxy(100, 80, (char*)"Numero de clases:");  // Posición X e Y reducidas
     
     // Mostrar el número actual
     char num_str[10];
     sprintf(num_str, "%d", num_classes);
     
+    // Posiciones ajustadas para pantalla pequeña
+    int btnX = WINDOW_WIDTH/2;
+    int btnY = 120;
+    
     setfillstyle(SOLID_FILL, WHITE);
-    bar(400, 150, 450, 180);
-    rectangle(400, 150, 450, 180);
+    bar(btnX-25, btnY, btnX+25, btnY+30);
+    rectangle(btnX-25, btnY, btnX+25, btnY+30);
     
     setcolor(APP_COLOR_TEXT);
     settextjustify(CENTER_TEXT, CENTER_TEXT);
-    outtextxy(425, 165, num_str);
+    outtextxy(btnX, btnY+15, num_str);
     
-    // Botones + y -
+    // Botones + y - con posiciones relativas
     setfillstyle(SOLID_FILL, LIGHTGRAY);
-    bar(460, 150, 490, 180);
-    rectangle(460, 150, 490, 180);
-    outtextxy(475, 165, (char*)"+");
+    bar(btnX+35, btnY, btnX+65, btnY+30);
+    rectangle(btnX+35, btnY, btnX+65, btnY+30);
+    outtextxy(btnX+50, btnY+15, (char*)"+");
     
-    bar(360, 150, 390, 180);
-    rectangle(360, 150, 390, 180);
-    outtextxy(375, 165, (char*)"-");
+    bar(btnX-65, btnY, btnX-35, btnY+30);
+    rectangle(btnX-65, btnY, btnX-35, btnY+30);
+    outtextxy(btnX-50, btnY+15, (char*)"-");
     
     // Botón Aceptar
-    bar(400, 200, 500, 230);
-    rectangle(400, 200, 500, 230);
-    outtextxy(450, 215, (char*)"Aceptar");
+    bar(btnX-50, btnY+50, btnX+50, btnY+80);
+    rectangle(btnX-50, btnY+50, btnX+50, btnY+80);
+    outtextxy(btnX, btnY+65, (char*)"Aceptar");
     
     // Esperar selección
     int done = 0;
@@ -345,33 +368,33 @@ void plot_histogram(DataSet* data, int num_classes) {
             getmouseclick(WM_LBUTTONDOWN, x, y);
             
             // Verificar si se hizo clic en +
-            if (x >= 460 && x <= 490 && y >= 150 && y <= 180) {
-                if (num_classes < 20) {
+            if (x >= btnX+35 && x <= btnX+65 && y >= btnY && y <= btnY+30) {
+                if (num_classes < 15) {  // Máximo reducido para pantalla pequeña
                     num_classes++;
                     sprintf(num_str, "%d", num_classes);
                     
                     setfillstyle(SOLID_FILL, WHITE);
-                    bar(401, 151, 449, 179);
+                    bar(btnX-24, btnY+1, btnX+24, btnY+29);
                     
                     setcolor(APP_COLOR_TEXT);
-                    outtextxy(425, 165, num_str);
+                    outtextxy(btnX, btnY+15, num_str);
                 }
             }
             // Verificar si se hizo clic en -
-            else if (x >= 360 && x <= 390 && y >= 150 && y <= 180) {
+            else if (x >= btnX-65 && x <= btnX-35 && y >= btnY && y <= btnY+30) {
                 if (num_classes > 2) {
                     num_classes--;
                     sprintf(num_str, "%d", num_classes);
                     
                     setfillstyle(SOLID_FILL, WHITE);
-                    bar(401, 151, 449, 179);
+                    bar(btnX-24, btnY+1, btnX+24, btnY+29);
                     
                     setcolor(APP_COLOR_TEXT);
-                    outtextxy(425, 165, num_str);
+                    outtextxy(btnX, btnY+15, num_str);
                 }
             }
             // Verificar si se hizo clic en Aceptar
-            else if (x >= 400 && x <= 500 && y >= 200 && y <= 230) {
+            else if (x >= btnX-50 && x <= btnX+50 && y >= btnY+50 && y <= btnY+80) {
                 done = 1;
             }
         }
@@ -380,28 +403,23 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     clear_work_area();
     
-    // Área para el gráfico
-    int margin = 80;
+    // Área para el gráfico - márgenes reducidos para pantalla pequeña
+    int margin = 50;  // Reducido de 80 a 50
     int x0 = margin; // Origen X
     int y0 = WINDOW_HEIGHT - margin; // Origen Y
     int width = WINDOW_WIDTH - 2 * margin;
     int height = WINDOW_HEIGHT - 2 * margin - 40; // -40 para el menú superior
     
-    // Obtener datos ordenados
+    // Cálculos de datos para el histograma (sin cambios)
     double* sorted = sort_data(data);
-    
-    // Encontrar valores mínimo y máximo
     double min_val = sorted[0];
     double max_val = sorted[data->count - 1];
-    
-    // Calcular ancho de clase
     double class_width = (max_val - min_val) / num_classes;
     if (class_width == 0) { // Todos los valores son iguales
         class_width = 1.0;
         max_val = min_val + num_classes;
     }
     
-    // Inicializar contador de frecuencias
     int* frequencies = (int*)calloc(num_classes, sizeof(int));
     
     // Contar frecuencias
@@ -425,8 +443,8 @@ void plot_histogram(DataSet* data, int num_classes) {
     draw_axes(x0, y0, width, height, min_val, max_val, 0, max_freq * 1.1, 
               (char*)"Valor", (char*)"Frecuencia", title);
     
-    // Dibujar barras
-    int bar_width = width / num_classes;
+    // Dibujar barras - ajustar ancho para pantalla pequeña
+    int bar_width = (width / num_classes) - 1;  // -1 para separación
     
     for (int i = 0; i < num_classes; i++) {
         double class_start = min_val + i * class_width;
@@ -441,42 +459,33 @@ void plot_histogram(DataSet* data, int num_classes) {
         setcolor(BLACK);
         rectangle(x, y0 - bar_height, x + bar_width, y0);
         
-        // Mostrar frecuencia encima de la barra
-        if (frequencies[i] > 0) {
+        // Mostrar frecuencia encima de la barra solo si hay espacio
+        if (frequencies[i] > 0 && bar_height > 15) {
             char freq_str[10];
             sprintf(freq_str, "%d", frequencies[i]);
             settextjustify(CENTER_TEXT, BOTTOM_TEXT);
-            outtextxy(x + bar_width/2, y0 - bar_height - 5, freq_str);
+            settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
+            outtextxy(x + bar_width/2, y0 - bar_height - 2, freq_str);
         }
     }
     
-    // Mostrar estadísticas
-    int stats_y = 70;
+    // Mostrar estadísticas - compactas para pantalla pequeña
     settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
     setcolor(APP_COLOR_TEXT);
     
     char stats[100];
-    sprintf(stats, "Numero de datos: %d", data->count);
-    outtextxy(x0, stats_y, stats);
-    
-    sprintf(stats, "Ancho de clase: %.2f", class_width);
-    outtextxy(x0, stats_y + 25, stats);
-    
-    sprintf(stats, "Minimo: %.2f", min_val);
-    outtextxy(x0, stats_y + 50, stats);
-    
-    sprintf(stats, "Maximo: %.2f", max_val);
-    outtextxy(x0, stats_y + 75, stats);
+    sprintf(stats, "Datos:%d Ancho:%.2f Min:%.2f Max:%.2f", 
+            data->count, class_width, min_val, max_val);
+    outtextxy(50, 50, stats);
     
     free(sorted);
     free(frequencies);
     
     // Esperar un clic para continuar
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
     settextjustify(LEFT_TEXT, TOP_TEXT);
     setcolor(APP_COLOR_TEXT);
-    outtextxy(100, WINDOW_HEIGHT - 30, (char*)"Clic para continuar...");
+    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
     
     while (!ismouseclick(WM_LBUTTONDOWN)) {
         delay(100);
