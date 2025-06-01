@@ -166,7 +166,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     
     // Dibujar diagrama
     settextjustify(RIGHT_TEXT, CENTER_TEXT);
-    int y = 150;
+    int y = 100;
     
     for (int stem = min_stem; stem <= max_stem; stem++) {
         char stem_str[20];
