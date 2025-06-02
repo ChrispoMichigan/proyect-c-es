@@ -65,4 +65,10 @@ double find_min(DataSet* data);
 double find_max(DataSet* data);
 double find_mean(DataSet* data);
 
+// Funciones auxiliares para visualización de datos
+void drawDataGrid(int startX, int startY, int rows, int cols, int cellWidth, int cellHeight);
+void displayDataInGrid(int startX, int startY, int rows, int cols, 
+                       int cellWidth, int cellHeight, int page);
+void drawNavigationControls(int currentPage, int totalPages, int gridStartX, int gridStartY, int cellHeight);
+
 #endif // EXCEL_C_H

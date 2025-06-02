@@ -6,54 +6,81 @@
 #include <conio.h>
 #include "../../include/excel_c.h"
 
-// Función para input manual de datos
+// Función para input manual de datos con visualización en grid
 void input_data_manually() {
     int x, y, i = 0;
     char input[50] = "";
     char temp[2] = "";
     double value;
+    int current_page = 0;
+    
+    // Constantes para el grid - definidas dentro de la función pero accesibles para las subfunciones
+    const int GRID_ROWS = 10;
+    const int GRID_COLS = 10;
+    const int CELL_WIDTH = 55;
+    const int CELL_HEIGHT = 25;
+    const int GRID_START_X = 50;
+    const int GRID_START_Y = 200;
+    int items_per_page = GRID_ROWS * GRID_COLS;
     
     clear_work_area();
     
+    // Título y instrucciones
     setcolor(APP_COLOR_TEXT);
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-    outtextxy(100, 100, (char*)"Ingrese los datos (un valor por linea)");
-    outtextxy(100, 130, (char*)"Presione Enter despues de cada valor");
-    outtextxy(100, 160, (char*)"Presione ESC para finalizar");
+    outtextxy(50, 60, (char*)"Ingrese los datos (un valor por linea)");
+    outtextxy(50, 85, (char*)"Presione Enter despues de cada valor");
+    outtextxy(50, 110, (char*)"Presione ESC para finalizar");
     
+    // Cuadro de entrada
     setfillstyle(SOLID_FILL, WHITE);
-    bar(100, 200, 400, 230);
-    rectangle(100, 200, 400, 230);
+    bar(100, 150, 400, 180);
+    rectangle(100, 150, 400, 180);
     
+    // Inicializar datos
     current_data.count = 0;
     strcpy(current_data.source, "Entrada Manual");
     
+    // Posición inicial del cursor
     x = 110;
-    y = 215;
+    y = 165;
     
+    // Dibujar líneas de la cuadrícula inicial
+    drawDataGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, CELL_WIDTH, CELL_HEIGHT);
+    
+    // Bucle principal de entrada de datos
     while (1) {
         if (kbhit()) {
             char key = getch();
             
-            if (key == 27) { // ESC
+            if (key == 27) { // ESC - Finalizar entrada
                 break;
-            } else if (key == 13) { // Enter
+            } else if (key == 13) { // Enter - Procesar valor
                 if (strlen(input) > 0) {
                     value = atof(input);
                     current_data.data[current_data.count++] = value;
                     
+                    // Calcular página actual basado en la cantidad de datos
+                    current_page = (current_data.count - 1) / items_per_page;
+                    
                     // Limpiar área de entrada
                     setfillstyle(SOLID_FILL, WHITE);
-                    bar(100, 200, 400, 230);
-                    rectangle(100, 200, 400, 230);
+                    bar(100, 150, 400, 180);
+                    rectangle(100, 150, 400, 180);
                     x = 110;
                     
-                    // Mostrar el valor ingresado en la lista
-                    char valueStr[50];
-                    sprintf(valueStr, "%.2f", value);
-                    outtextxy(450, 200 + (current_data.count - 1) * 25, valueStr);
+                    // Mostrar datos en el grid
+                    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                                     CELL_WIDTH, CELL_HEIGHT, current_page);
                     
-                    // Limpiar input
+                    // Dibujar controles de navegación si hay más de una página
+                    if ((current_data.count > items_per_page)) {
+                        drawNavigationControls(current_page, 
+                                              (current_data.count - 1) / items_per_page + 1,
+                                              GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+                    }
+                    
+                    // Limpiar input para el próximo valor
                     input[0] = '\0';
                     i = 0;
                 }
@@ -64,12 +91,13 @@ void input_data_manually() {
                     
                     // Actualizar visualización
                     setfillstyle(SOLID_FILL, WHITE);
-                    bar(100, 200, 400, 230);
-                    rectangle(100, 200, 400, 230);
+                    bar(100, 150, 400, 180);
+                    rectangle(100, 150, 400, 180);
                     x = 110;
                     outtextxy(x, y, input);
                 }
             } else if ((key >= '0' && key <= '9') || key == '.' || key == '-') {
+                // Solo permitir caracteres válidos para números
                 temp[0] = key;
                 temp[1] = '\0';
                 strcat(input, temp);
@@ -78,25 +106,191 @@ void input_data_manually() {
                 i++;
             }
         }
+        
+        // Verificar clicks para navegación entre páginas
+        if (ismouseclick(WM_LBUTTONDOWN) && current_data.count > items_per_page) {
+            int clickX, clickY;
+            getmouseclick(WM_LBUTTONDOWN, clickX, clickY);
+            
+            int navY = GRID_START_Y + GRID_ROWS * CELL_HEIGHT + 10;
+            
+            // Botón "Anterior"
+            if (clickX >= GRID_START_X && clickX <= GRID_START_X + 100 &&
+                clickY >= navY && clickY <= navY + 30) {
+                
+                if (current_page > 0) {
+                    current_page--;
+                    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                                    CELL_WIDTH, CELL_HEIGHT, current_page);
+                    drawNavigationControls(current_page, 
+                                          (current_data.count - 1) / items_per_page + 1,
+                                          GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+                }
+            }
+            
+            // Botón "Siguiente"
+            if (clickX >= GRID_START_X + 350 && clickX <= GRID_START_X + 450 &&
+                clickY >= navY && clickY <= navY + 30) {
+                
+                if (current_page < (current_data.count - 1) / items_per_page) {
+                    current_page++;
+                    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                                    CELL_WIDTH, CELL_HEIGHT, current_page);
+                    drawNavigationControls(current_page, 
+                                          (current_data.count - 1) / items_per_page + 1,
+                                          GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+                }
+            }
+        }
+        
+        delay(50);
     }
     
+    // Marcar datos como cargados
     current_data.is_loaded = 1;
     
-    // Mostrar mensaje con el número de datos ingresados
+    // Mostrar mensaje de confirmación
+    setfillstyle(SOLID_FILL, COLOR(200, 255, 200));
+    bar(WINDOW_WIDTH/2 - 200, WINDOW_HEIGHT/2 - 50, WINDOW_WIDTH/2 + 200, WINDOW_HEIGHT/2 + 50);
+    rectangle(WINDOW_WIDTH/2 - 200, WINDOW_HEIGHT/2 - 50, WINDOW_WIDTH/2 + 200, WINDOW_HEIGHT/2 + 50);
+    
+    setcolor(GREEN); // Cambiado DARKGREEN a GREEN que es un color estándar
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 20, (char*)"Datos ingresados correctamente");
+    
     char message[100];
-    sprintf(message, "Se han ingresado %d datos correctamente", current_data.count);
+    sprintf(message, "Total: %d valores", current_data.count);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 10, message);
     
-    setfillstyle(SOLID_FILL, LIGHTGRAY);
-    bar(100, 500, 500, 530);
-    setcolor(APP_COLOR_TEXT);
-    outtextxy(110, 510, message);
+    setcolor(BLACK);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 35, (char*)"Presione ENTER para volver al menu");
     
-    // Esperar un clic para continuar
-    outtextxy(100, 540, (char*)"Clic para continuar...");
-    while (!ismouseclick(WM_LBUTTONDOWN)) {
-        delay(100);
+    // Limpiar cualquier tecla pendiente en el buffer
+    while (kbhit()) getch();
+    
+    // Esperar a que se presione ENTER
+    bool waiting = true;
+    while (waiting) {
+        if (kbhit()) {
+            char key = getch();
+            if (key == 13) { // 13 es el código ASCII para ENTER
+                waiting = false;
+            }
+        }
+        
+        // También permitir hacer clic para continuar (como alternativa)
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            clearmouseclick(WM_LBUTTONDOWN);
+            waiting = false;
+        }
+        
+        delay(50);
     }
-    clearmouseclick(WM_LBUTTONDOWN);
+    
+    // Limpiar pantalla y redibujar el menú principal
+    clear_work_area();
+    draw_menu();
+}
+
+// Función auxiliar para dibujar la cuadrícula de datos
+void drawDataGrid(int startX, int startY, int rows, int cols, int cellWidth, int cellHeight) {
+    setcolor(DARKGRAY);
+    setlinestyle(SOLID_LINE, 0, NORM_WIDTH);
+    
+    // Dibujar líneas horizontales
+    for (int r = 0; r <= rows; r++) {
+        line(startX, startY + r * cellHeight, 
+             startX + cols * cellWidth, startY + r * cellHeight);
+    }
+    
+    // Dibujar líneas verticales
+    for (int c = 0; c <= cols; c++) {
+        line(startX + c * cellWidth, startY, 
+             startX + c * cellWidth, startY + rows * cellHeight);
+    }
+}
+
+// Función auxiliar para mostrar datos en la cuadrícula
+void displayDataInGrid(int startX, int startY, int rows, int cols, 
+                       int cellWidth, int cellHeight, int page) {
+    // Limpiar área de la cuadrícula
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(startX + 1, startY + 1, 
+        startX + cols * cellWidth - 1, startY + rows * cellHeight - 1);
+    
+    // Redibujar las líneas de la cuadrícula
+    drawDataGrid(startX, startY, rows, cols, cellWidth, cellHeight);
+    
+    // Calcular elementos por página e índice inicial
+    int itemsPerPage = rows * cols;
+    int startIndex = page * itemsPerPage;
+    int endIndex = startIndex + itemsPerPage;
+    
+    if (endIndex > current_data.count) {
+        endIndex = current_data.count;
+    }
+    
+    // Mostrar datos en la cuadrícula
+    setcolor(APP_COLOR_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    
+    for (int i = startIndex; i < endIndex; i++) {
+        // Calcular posición en la cuadrícula
+        int relativeIndex = i - startIndex;
+        int row = relativeIndex / cols;
+        int col = relativeIndex % cols;
+        
+        // Coordenadas centrales de la celda
+        int cellX = startX + col * cellWidth + cellWidth/2;
+        int cellY = startY + row * cellHeight + cellHeight/2;
+        
+        // Mostrar valor formateado
+        char valueStr[20];
+        sprintf(valueStr, "%.2f", current_data.data[i]);
+        outtextxy(cellX, cellY, valueStr);
+    }
+    
+    // Mostrar número de página y total de datos
+    char pageInfo[100];
+    sprintf(pageInfo, "Pagina %d de %d - Total: %d valores", 
+            page + 1, (current_data.count - 1) / itemsPerPage + 1, current_data.count);
+    
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    setcolor(BLUE);
+    outtextxy(startX + cols * cellWidth / 2, startY - 20, pageInfo);
+}
+
+// Función auxiliar para dibujar los controles de navegación
+// Modificada para aceptar las coordenadas del grid como parámetros
+void drawNavigationControls(int currentPage, int totalPages, int gridStartX, int gridStartY, int cellHeight) {
+    int navY = gridStartY + 10 * cellHeight + 10;
+    
+    // Botón "Anterior"
+    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    bar(gridStartX, navY, gridStartX + 100, navY + 30);
+    rectangle(gridStartX, navY, gridStartX + 100, navY + 30);
+    
+    setcolor(currentPage > 0 ? BLACK : DARKGRAY);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(gridStartX + 50, navY + 15, (char*)"< Anterior");
+    
+    // Botón "Siguiente"
+    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    bar(gridStartX + 350, navY, gridStartX + 450, navY + 30);
+    rectangle(gridStartX + 350, navY, gridStartX + 450, navY + 30);
+    
+    setcolor(currentPage < totalPages - 1 ? BLACK : DARKGRAY);
+    outtextxy(gridStartX + 400, navY + 15, (char*)"Siguiente >");
+    
+    // Información de página
+    char pageInfo[50];
+    sprintf(pageInfo, "Pagina %d de %d", currentPage + 1, totalPages);
+    
+    setcolor(BLUE);
+    outtextxy(gridStartX + 225, navY + 15, pageInfo);
 }
 
 // Diálogo para seleccionar archivo
