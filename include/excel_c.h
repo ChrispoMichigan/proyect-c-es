@@ -3,8 +3,6 @@
 
 #include <graphics.h>
 
-// Incluir statistical.h después de nuestras definiciones
-// para evitar conflictos
 
 // Constantes generales
 #define WINDOW_WIDTH 640
@@ -12,7 +10,7 @@
 #define MAX_DATA_POINTS 1000
 #define MAX_FILENAME_LEN 256
 
-// Constantes de colores (con nombres modificados para evitar conflictos)
+// Constantes de colores
 #define APP_COLOR_BACKGROUND WHITE
 #define APP_COLOR_TEXT BLACK
 #define APP_COLOR_GRID LIGHTGRAY
@@ -29,7 +27,6 @@
 #define APP_COLOR_BUTTON COLOR(70, 130, 180)
 #define APP_COLOR_BUTTON_HOVER COLOR(100, 160, 210)
 
-// Incluir statistical.h aquí para usar su definición de DataSet
 #include "statistical.h"
 
 // Estructura para botón interactivo

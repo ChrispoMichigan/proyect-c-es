@@ -33,7 +33,7 @@ void app_init() {
     // Dibujar menú inicial
     draw_menu();
     
-    // Dibujar título más elegante
+    // Dibujar título 
     settextstyle(GOTHIC_FONT, HORIZ_DIR, 2);
     setcolor(BLUE);
     settextjustify(CENTER_TEXT, CENTER_TEXT);
@@ -46,7 +46,7 @@ void app_init() {
     line(WINDOW_WIDTH/2 - 150, WINDOW_HEIGHT/2 + 150, WINDOW_WIDTH/2 + 150, WINDOW_HEIGHT/2 + 150);
     setlinestyle(SOLID_LINE, 0, NORM_WIDTH);
     
-    // Mensaje de bienvenida con mejor estilo
+    // Mensaje de bienvenida
     settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
     setcolor(DARKGRAY);
     outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 60, (char*)"Seleccione una opcion del menu para comenzar");
@@ -60,7 +60,7 @@ void app_init() {
 
 // Limpieza antes de cerrar la aplicación
 void app_cleanup() {
-    // Por ahora no hay nada que limpiar específicamente
+    // limpiar específicamente
 }
 
 // Bucle principal de la aplicación
@@ -83,6 +83,6 @@ void main_loop() {
             draw_menu();
         }
         
-        delay(100); // Pequeña pausa para evitar uso excesivo de CPU
+        delay(100);
     }
 }

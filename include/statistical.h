@@ -1,15 +1,13 @@
 #ifndef STATISTICAL_H
 #define STATISTICAL_H
 
-// No incluir excel_c.h aquí para evitar dependencia circular
 #include <graphics.h>
 #include <time.h>
 
-// Incluimos la definición completa de DataSet directamente
 typedef struct {
-    double data[1000]; // Usar el mismo tamaño definido en excel_c.h (MAX_DATA_POINTS)
+    double data[1000];
     int count;
-    char source[256];  // Usar el mismo tamaño definido en excel_c.h (MAX_FILENAME_LEN)
+    char source[256]; 
     int is_loaded;
 } DataSet;
 

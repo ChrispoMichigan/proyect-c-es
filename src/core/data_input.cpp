@@ -5,8 +5,6 @@
 #include <dirent.h>
 #include <conio.h>
 #include "../../include/excel_c.h"
-
-// Incluir los headers necesarios para el diálogo de Windows
 #include <windows.h>
 #include <commdlg.h>
 
@@ -184,7 +182,6 @@ void input_data_manually() {
             }
         }
         
-        // También permitir hacer clic para continuar
         if (ismouseclick(WM_LBUTTONDOWN)) {
             clearmouseclick(WM_LBUTTONDOWN);
             waiting = false;

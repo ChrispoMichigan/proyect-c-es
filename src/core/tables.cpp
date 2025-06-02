@@ -15,7 +15,6 @@ const int num_alpha_values = 9;
 
 // Tabla T pre-calculada (grados libertad vs alpha)
 // Formato: t_table[df][alpha_index] donde alpha_index corresponde a common_alpha_values
-// Estos son valores típicos para T de una cola, df desde 1 hasta 30, y algunos valores seleccionados después
 const double t_table[31][9] = {
     // df=1
     {318.31, 63.66, 31.82, 12.71, 6.31, 3.08, 1.96, 1.38, 0.00},
@@ -645,4 +644,139 @@ void display_t_distribution_info(int df, double alpha, double t_value) {
     setcolor(DARKGRAY);
     sprintf(result, "P(T > %.4f) = %.4f para v = %d grados de libertad", t_value, alpha, df);
     outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 220, result);
+}
+
+// Añadir esta función helper al archivo tables.cpp para manejar entrada de texto
+void handle_text_input(char* text_buffer, int max_length, int x, int y, int width, int height) {
+    int cursor_pos = strlen(text_buffer);
+    int old_cursor_pos = cursor_pos;
+    char temp_buffer[100];
+    strcpy(temp_buffer, text_buffer);
+    
+    // Dibujar el campo de entrada
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(x, y, x + width, y + height);
+    rectangle(x, y, x + width, y + height);
+    
+    settextjustify(LEFT_TEXT, CENTER_TEXT);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+    
+    setcolor(BLACK);
+    outtextxy(x + 5, y + height/2, text_buffer);
+    
+    // Cursor vertical al final del texto
+    int text_width = textwidth(text_buffer);
+    setcolor(BLACK);
+    line(x + 5 + text_width, y + 2, x + 5 + text_width, y + height - 2);
+    
+    // Esperar entrada de teclado
+    while (1) {
+        // Dibujar cursor parpadeante
+        static int cursor_visible = 1;
+        static clock_t last_blink = 0;
+        
+        if (clock() - last_blink > CLOCKS_PER_SEC/2) {
+            cursor_visible = !cursor_visible;
+            last_blink = clock();
+            
+            if (cursor_visible) {
+                setcolor(BLACK);
+                line(x + 5 + text_width, y + 2, x + 5 + text_width, y + height - 2);
+            } else {
+                setcolor(WHITE);
+                line(x + 5 + text_width, y + 2, x + 5 + text_width, y + height - 2);
+            }
+        }
+        
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int mx, my;
+            getmouseclick(WM_LBUTTONDOWN, mx, my);
+            
+            // Si hizo clic fuera del campo, finalizar la entrada
+            if (mx < x || mx > x + width || my < y || my > y + height) {
+                // Validar que sea un número válido
+                if (strlen(text_buffer) == 0 || !isdigit(text_buffer[0]) && text_buffer[0] != '-' && text_buffer[0] != '.') {
+                    // Si no es un número válido, restaurar el valor anterior
+                    strcpy(text_buffer, temp_buffer);
+                    
+                    // Redibujar el campo con el valor restaurado
+                    setfillstyle(SOLID_FILL, WHITE);
+                    bar(x, y, x + width, y + height);
+                    rectangle(x, y, x + width, y + height);
+                    
+                    settextjustify(LEFT_TEXT, CENTER_TEXT);
+                    setcolor(BLACK);
+                    outtextxy(x + 5, y + height/2, text_buffer);
+                }
+                return;
+            }
+        }
+        
+        if (kbhit()) {
+            int key = getch();
+            
+            // Enter - finalizar entrada
+            if (key == 13) {
+                // Validar que sea un número válido
+                if (strlen(text_buffer) == 0 || (!isdigit(text_buffer[0]) && text_buffer[0] != '-' && text_buffer[0] != '.')) {
+                    // Si no es un número válido, restaurar el valor anterior
+                    strcpy(text_buffer, temp_buffer);
+                }
+                break;
+            }
+            
+            // Backspace - borrar último caracter
+            else if (key == 8 && cursor_pos > 0) {
+                cursor_pos--;
+                text_buffer[cursor_pos] = '\0';
+            }
+            
+            // Escape - cancelar y restaurar valor original
+            else if (key == 27) {
+                strcpy(text_buffer, temp_buffer);
+                break;
+            }
+            
+            // Caracteres permitidos: dígitos, signo menos y punto decimal
+            else if ((isdigit(key) || key == '-' || key == '.') && cursor_pos < max_length - 1) {
+                // Solo permitir un signo menos al principio
+                if (key == '-' && cursor_pos > 0) continue;
+                
+                // Solo permitir un punto decimal
+                if (key == '.' && strchr(text_buffer, '.') != NULL) continue;
+                
+                text_buffer[cursor_pos] = key;
+                cursor_pos++;
+                text_buffer[cursor_pos] = '\0';
+            }
+            
+            // Redibujar el campo con el nuevo texto
+            setfillstyle(SOLID_FILL, WHITE);
+            bar(x, y, x + width, y + height);
+            rectangle(x, y, x + width, y + height);
+            
+            settextjustify(LEFT_TEXT, CENTER_TEXT);
+            setcolor(BLACK);
+            outtextxy(x + 5, y + height/2, text_buffer);
+            
+            // Actualizar posición del cursor
+            text_width = textwidth(text_buffer);
+            
+            // Redibujar cursor si es visible
+            if (cursor_visible) {
+                setcolor(BLACK);
+                line(x + 5 + text_width, y + 2, x + 5 + text_width, y + height - 2);
+            }
+        }
+        
+        delay(10);
+    }
+}
+
+// Función para obtener un valor numérico del texto
+double get_numeric_value(char* text) {
+    // Asegurarnos de que el texto tenga al menos un caracter
+    if (strlen(text) == 0) return 0.0;
+    
+    return atof(text);
 }

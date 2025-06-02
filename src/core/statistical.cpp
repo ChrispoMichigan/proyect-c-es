@@ -59,7 +59,7 @@ double* get_sorted_data(DataSet* data) {
         sorted[i] = data->data[i];
     }
 
-    // Ordenar utilizando bubble sort (simple pero no eficiente)
+    // Ordenar utilizando
     for (int i = 0; i < data->count - 1; i++) {
         for (int j = 0; j < data->count - i - 1; j++) {
             if (sorted[j] > sorted[j + 1]) {
@@ -208,7 +208,6 @@ StatResult calc_mode(DataSet* data) {
         modal_count++;
     }
 
-    // Si todos los valores aparecen la misma cantidad de veces, no hay moda clara
     if (max_frequency == 1) {
         sprintf(result.description, "No hay moda clara (frecuencia=%d)", max_frequency);
     } else if (modal_count > 1) {
@@ -370,7 +369,7 @@ StatResult calc_variance_sample(DataSet* data) {
     for (int i = 0; i < data->count; i++) {
         double diff = data->data[i] - mean;
         sum_squares += diff * diff;
-        operations += 3; // Resta, multiplicación y suma
+        operations += 3;
     }
 
     // Calculamos la varianza (fórmula para muestras)
@@ -445,7 +444,7 @@ StatResult calc_variance_population(DataSet* data) {
     for (int i = 0; i < data->count; i++) {
         double diff = data->data[i] - mean;
         sum_squares += diff * diff;
-        operations += 3; // Resta, multiplicación y suma
+        operations += 3;
     }
 
     // Calculamos la varianza (fórmula para población)
@@ -484,7 +483,7 @@ StatResult calc_stddev_population(DataSet* data) {
     // Actualizar tiempo y operaciones
     double sqrt_time = time_diff_ms(start_time);
     result.processing_time = time_diff_ms(start_total);
-    result.operations_count += 1; // Una operación extra (raíz cuadrada)
+    result.operations_count += 1;
     
     // Cambiar descripción
     strcpy(result.description, "Desviacion estandar poblacional");
@@ -499,11 +498,11 @@ void display_stat_result(StatResult result, int y_position) {
     const int COLOR_VALUE = BLACK;
     const int COLOR_INFO = DARKGRAY;
     
-    // Formato de muestra - 4 DECIMALES
+    // Formato de muestra
     char value_str[50];
     sprintf(value_str, "%.4f", result.result);
     
-    // Mostrar más decimales para el tiempo (6 en lugar de 3)
+    // Mostrar más decimales para el tiempo
     char time_str[50];
     sprintf(time_str, "Tiempo: %.6f ms", result.processing_time);
     

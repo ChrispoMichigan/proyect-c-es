@@ -1,7 +1,7 @@
 @echo off
 echo Compilando el proyecto de visualizacion estadistica...
 
-REM Crear directorios necesarios
+REM
 mkdir build 2>nul
 
 echo Compilando archivos cpp...
