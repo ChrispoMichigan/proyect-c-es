@@ -6,6 +6,10 @@
 #include <conio.h>
 #include "../../include/excel_c.h"
 
+// Incluir los headers necesarios para el diálogo de Windows
+#include <windows.h>
+#include <commdlg.h>
+
 // Función para input manual de datos con visualización en grid
 void input_data_manually() {
     int x, y, i = 0;
@@ -180,7 +184,7 @@ void input_data_manually() {
             }
         }
         
-        // También permitir hacer clic para continuar (como alternativa)
+        // También permitir hacer clic para continuar
         if (ismouseclick(WM_LBUTTONDOWN)) {
             clearmouseclick(WM_LBUTTONDOWN);
             waiting = false;
@@ -264,7 +268,6 @@ void displayDataInGrid(int startX, int startY, int rows, int cols,
 }
 
 // Función auxiliar para dibujar los controles de navegación
-// Modificada para aceptar las coordenadas del grid como parámetros
 void drawNavigationControls(int currentPage, int totalPages, int gridStartX, int gridStartY, int cellHeight) {
     int navY = gridStartY + 10 * cellHeight + 10;
     
@@ -293,218 +296,298 @@ void drawNavigationControls(int currentPage, int totalPages, int gridStartX, int
     outtextxy(gridStartX + 225, navY + 15, pageInfo);
 }
 
-// Diálogo para seleccionar archivo
+// Versión mejorada con el diálogo nativo de Windows
 int file_dialog(char* filename) {
-    DIR *dir;
-    struct dirent *ent;
-    int numFiles = 0;
-    char *files[100];
-    char currentPath[MAX_FILENAME_LEN] = "."; // Comenzamos en el directorio actual
-    int selected = -1;
+    OPENFILENAME ofn;                // Estructura para el diálogo de Windows
+    char szFile[MAX_FILENAME_LEN] = "";   // Buffer para el nombre de archivo inicializado vacío
     
-    clear_work_area();
+    printf("Inicializando diálogo de selección de archivo...\n");
     
-    setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-    outtextxy(100, 60, (char*)"Seleccione el archivo de datos");
+    // Inicializar la estructura OPENFILENAME
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = GetForegroundWindow(); // Ventana actual como propietaria
+    ofn.lpstrFile = szFile;                // Buffer donde se guarda el nombre de archivo
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "Archivos de texto\0*.txt\0Todos los archivos\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     
-    // Obtener archivos del directorio actual
-    if ((dir = opendir(currentPath)) != NULL) {
-        // Dibujar área de lista de archivos
-        setfillstyle(SOLID_FILL, WHITE);
-        bar(100, 100, 600, 500);
-        rectangle(100, 100, 600, 500);
-        
-        // Listar archivos
-        while ((ent = readdir(dir)) != NULL && numFiles < 100) {
-            // Solo mostrar archivos .txt
-            char *ext = strrchr(ent->d_name, '.');
-            if (ext && strcmp(ext, ".txt") == 0) {
-                files[numFiles] = strdup(ent->d_name);
-                outtextxy(120, 120 + numFiles * 30, files[numFiles]);
-                numFiles++;
-            }
+    printf("Mostrando diálogo de selección...\n");
+    // Mostrar el diálogo de selección de archivo
+    BOOL result = GetOpenFileName(&ofn);
+    
+    if (result) {
+        printf("Archivo seleccionado: %s\n", ofn.lpstrFile);
+        // Copiar el nombre de archivo seleccionado (incluida la ruta)
+        strcpy(filename, ofn.lpstrFile);
+        return 1; // Éxito
+    } else {
+        DWORD error = CommDlgExtendedError();
+        if (error) {
+            printf("Error en GetOpenFileName: 0x%lX\n", error);
+        } else {
+            printf("Usuario canceló la selección\n");
         }
-        closedir(dir);
-        
-        // Si no hay archivos .txt
-        if (numFiles == 0) {
-            outtextxy(150, 250, (char*)"No se encontraron archivos .txt");
-            outtextxy(150, 280, (char*)"Coloque archivos .txt en el directorio actual");
-        }
-        
-        // Botones
-        setfillstyle(SOLID_FILL, LIGHTGRAY);
-        bar(400, 520, 500, 550);
-        rectangle(400, 520, 500, 550);
-        outtextxy(420, 530, (char*)"Aceptar");
-        
-        bar(250, 520, 350, 550);
-        rectangle(250, 520, 350, 550);
-        outtextxy(270, 530, (char*)"Cancelar");
-        
-        // Esperar selección
-        int done = 0;
-        while (!done) {
-            if (ismouseclick(WM_LBUTTONDOWN)) {
-                int x, y;
-                getmouseclick(WM_LBUTTONDOWN, x, y);
-                
-                // Verificar si se hizo clic en un archivo
-                if (x >= 100 && x <= 600 && y >= 100 && y <= 500) {
-                    int fileIndex = (y - 120) / 30;
-                    if (fileIndex >= 0 && fileIndex < numFiles) {
-                        // Resaltar archivo seleccionado
-                        setfillstyle(SOLID_FILL, LIGHTBLUE);
-                        bar(101, 120 + fileIndex * 30 - 10, 599, 120 + fileIndex * 30 + 20);
-                        setcolor(APP_COLOR_TEXT);
-                        outtextxy(120, 120 + fileIndex * 30, files[fileIndex]);
-                        selected = fileIndex;
-                    }
-                }
-                // Verificar si se hizo clic en Aceptar
-                else if (x >= 400 && x <= 500 && y >= 520 && y <= 550) {
-                    if (selected >= 0) {
-                        strcpy(filename, files[selected]);
-                        done = 1;
-                    }
-                }
-                // Verificar si se hizo clic en Cancelar
-                else if (x >= 250 && x <= 350 && y >= 520 && y <= 550) {
-                    done = 1;
-                    selected = -1;
-                }
-            }
-            delay(100);
-        }
-        
-        // Liberar memoria
-        for (int i = 0; i < numFiles; i++) {
-            free(files[i]);
-        }
+        return 0; // Cancelado o error
     }
-    
-    return (selected >= 0);
 }
 
-// Cargar datos desde archivo
+// Función para cargar datos desde un archivo con diagnóstico ampliado
 void load_data_from_file() {
     char filename[MAX_FILENAME_LEN];
     FILE *file;
     
-    // Mostrar diálogo de selección de archivo
+    // Mostrar diálogo nativo de selección de archivo
     if (!file_dialog(filename)) {
         return; // Usuario canceló
     }
     
-    file = fopen(filename, "r");
+    // Restaurar el contexto gráfico después del diálogo
+    clear_work_area();
+    
+    // Mostrar información de carga
+    setcolor(APP_COLOR_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Cargando datos...");
+    
+    printf("Intentando abrir: %s\n", filename);
+    
+    // Usar el modo "rb" (binary read) para evitar problemas de codificación
+    file = fopen(filename, "rb");
     if (!file) {
-        // Mostrar error
+        printf("Error al abrir el archivo: %s\n", strerror(errno));
         clear_work_area();
         setcolor(RED);
         settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-        outtextxy(100, 100, (char*)"Error: No se pudo abrir el archivo");
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 20, (char*)"Error: No se pudo abrir el archivo");
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 20, (char*)filename);
+        settextjustify(LEFT_TEXT, TOP_TEXT); // Restaurar justificación de texto
         delay(2000);
         return;
     }
+    
+    printf("Archivo abierto exitosamente\n");
+    
+    // Leer y mostrar el contenido bruto del archivo para diagnóstico
+    char buffer[1024];
+    int bytes_read;
+    int total_bytes = 0;
+    
+    printf("Contenido del archivo:\n");
+    printf("--------------------\n");
+    
+    // Leer hasta 1024 bytes del archivo
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer) - 1, file)) > 0) {
+        buffer[bytes_read] = '\0'; // Null-terminar
+        printf("%s", buffer);
+        total_bytes += bytes_read;
+    }
+    printf("\n--------------------\n");
+    printf("Total bytes leídos: %d\n", total_bytes);
+    
+    // Volver al inicio del archivo
+    rewind(file);
     
     // Limpiar conjunto de datos actual
     current_data.count = 0;
     strcpy(current_data.source, filename);
     
-    // Leer datos del archivo
-    double value;
-    while (fscanf(file, "%lf", &value) == 1 && current_data.count < MAX_DATA_POINTS) {
-        current_data.data[current_data.count++] = value;
-    }
+    // Leer el archivo línea por línea para mejor diagnóstico
+    char line[1024];
+    int line_number = 0;
     
-    fclose(file);
+    // Intentar otra técnica de lectura: leer todo el archivo en memoria
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    rewind(file);
     
-    current_data.is_loaded = 1;
-    
-    // Mostrar mensaje con el número de datos cargados
-    clear_work_area();
-    char message[100];
-    sprintf(message, "Se cargaron %d datos desde %s", current_data.count, filename);
-    
-    setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-    outtextxy(100, 100, message);
-    
-    // Mostrar algunos datos de ejemplo
-    int showCount = current_data.count < 10 ? current_data.count : 10;
-    for (int i = 0; i < showCount; i++) {
-        char valueStr[50];
-        sprintf(valueStr, "%.2f", current_data.data[i]);
-        outtextxy(100, 150 + i * 30, valueStr);
-    }
-    
-    if (current_data.count > 10) {
-        outtextxy(100, 150 + 10 * 30, (char*)"...");
-    }
-    
-    // Esperar un clic para continuar
-    outtextxy(100, 450, (char*)"Clic para continuar...");
-    while (!ismouseclick(WM_LBUTTONDOWN)) {
-        delay(100);
-    }
-    clearmouseclick(WM_LBUTTONDOWN);
-    
-    clear_work_area();
-    
-    // Mostrar el grid de datos
-    display_data_grid(&current_data);
-}
-
-// Mostrar datos en formato de tabla
-void display_data_grid(DataSet* data) {
-    if (data->count == 0 || !data->is_loaded) {
+    char* file_contents = (char*)malloc(file_size + 1);
+    if (!file_contents) {
+        printf("Error: No se pudo asignar memoria para el archivo\n");
+        fclose(file);
         return;
     }
     
-    int cols = 5; // Número de columnas
-    int rows = (data->count + cols - 1) / cols; // Número de filas necesarias
+    fread(file_contents, 1, file_size, file);
+    file_contents[file_size] = '\0';
     
-    // Dibujar título
-    setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
-    char title[100];
-    sprintf(title, "Datos (%s)", data->source);
-    outtextxy(50, 50, title);
+    printf("Archivo completo leído en memoria:\n%s\n", file_contents);
     
-    // Dibujar cuadrícula
-    int cell_width = 100;
-    int cell_height = 30;
-    int start_x = 50;
-    int start_y = 100;
+    // Ahora procesamos los números utilizando strtod para mayor robustez
+    char* end_ptr;
+    double value;
+    char* current_ptr = file_contents;
     
-    // Dibujar encabezados
-    setfillstyle(SOLID_FILL, LIGHTGRAY);
-    for (int i = 0; i < cols; i++) {
-        bar(start_x + i * cell_width, start_y - cell_height, 
-            start_x + (i+1) * cell_width, start_y);
-        rectangle(start_x + i * cell_width, start_y - cell_height, 
-                 start_x + (i+1) * cell_width, start_y);
-                 
-        char header[10];
-        sprintf(header, "Col %d", i+1);
-        outtextxy(start_x + i * cell_width + 10, start_y - cell_height + 10, header);
+    // Omitir espacios iniciales
+    while (*current_ptr && isspace((unsigned char)*current_ptr)) {
+        current_ptr++;
     }
     
-    // Dibujar datos
-    int data_index = 0;
-    for (int row = 0; row < rows && data_index < data->count; row++) {
-        for (int col = 0; col < cols && data_index < data->count; col++) {
-            // Celda
-            rectangle(start_x + col * cell_width, start_y + row * cell_height, 
-                     start_x + (col+1) * cell_width, start_y + (row+1) * cell_height);
-            
-            // Valor
-            char value_str[20];
-            sprintf(value_str, "%.2f", data->data[data_index]);
-            outtextxy(start_x + col * cell_width + 10, start_y + row * cell_height + 10, value_str);
-            
-            data_index++;
+    while (*current_ptr) {
+        // Intentar convertir a número
+        value = strtod(current_ptr, &end_ptr);
+        
+        if (current_ptr == end_ptr) {
+            // No se pudo convertir, avanzar hasta el siguiente carácter
+            current_ptr++;
+            continue;
+        }
+        
+        // Añadir valor al conjunto de datos
+        if (current_data.count < MAX_DATA_POINTS) {
+            printf("Valor leído: %.2f\n", value);
+            current_data.data[current_data.count++] = value;
+        } else {
+            printf("Límite de datos alcanzado\n");
+            break;
+        }
+        
+        // Avanzar al siguiente token
+        current_ptr = end_ptr;
+        
+        // Omitir espacios
+        while (*current_ptr && isspace((unsigned char)*current_ptr)) {
+            current_ptr++;
         }
     }
+    
+    free(file_contents);
+    fclose(file);
+    
+    printf("Total valores numéricos encontrados: %d\n", current_data.count);
+    
+    // Si no se leyó ningún dato, mostrar error
+    if (current_data.count == 0) {
+        clear_work_area();
+        setcolor(RED);
+        settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 20, 
+                 (char*)"Error: No se encontraron datos numericos validos");
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 20, (char*)filename);
+        settextjustify(LEFT_TEXT, TOP_TEXT);
+        delay(2000);
+        return;
+    }
+    
+    current_data.is_loaded = 1;
+    
+    // Mostrar un mensaje de éxito
+    clear_work_area();
+    setcolor(GREEN);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    char message[100];
+    sprintf(message, "Se cargaron %d datos correctamente", current_data.count);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, message);
+    delay(1500);
+    
+    // Mostrar datos en el grid
+    displayDataGrid();
+}
+
+// Nueva función para mostrar los datos cargados en una cuadrícula paginada
+void displayDataGrid() {
+    clear_work_area();
+    
+    // Constantes para el grid
+    const int GRID_ROWS = 10;
+    const int GRID_COLS = 10;
+    const int CELL_WIDTH = 55;
+    const int CELL_HEIGHT = 25;
+    const int GRID_START_X = 50;
+    const int GRID_START_Y = 150;
+    int items_per_page = GRID_ROWS * GRID_COLS;
+    int current_page = 0;
+    int total_pages = (current_data.count - 1) / items_per_page + 1;
+    
+    // Título con información del archivo
+    setcolor(APP_COLOR_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    char title[100];
+    sprintf(title, "Datos cargados de: %s", current_data.source);
+    outtextxy(270, 60, title);
+    
+    // Dibujar la cuadrícula inicial
+    drawDataGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, CELL_WIDTH, CELL_HEIGHT);
+    
+    // Mostrar datos en la cuadrícula
+    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                     CELL_WIDTH, CELL_HEIGHT, current_page);
+    
+    // Dibujar controles de navegación si hay más de una página
+    if (current_data.count > items_per_page) {
+        drawNavigationControls(current_page, total_pages,
+                              GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+    }
+    
+    // Mensaje para volver al menú principal
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    setcolor(BLUE);
+    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT - 20, (char*)"Presione ENTER para volver al menu");
+    settextjustify(LEFT_TEXT, TOP_TEXT); // Restaurar justificación
+    
+    // Esperar entrada para continuar
+    bool done = false;
+    
+    while (!done) {
+        // Verificar teclas
+        if (kbhit()) {
+            char key = getch();
+            if (key == 13) { // ENTER
+                done = true;
+            }
+        }
+        
+        // Verificar clics para navegación entre páginas
+        if (ismouseclick(WM_LBUTTONDOWN) && current_data.count > items_per_page) {
+            int x, y;
+            getmouseclick(WM_LBUTTONDOWN, x, y);
+            
+            int navY = GRID_START_Y + GRID_ROWS * CELL_HEIGHT + 10;
+            
+            // Botón "Anterior"
+            if (x >= GRID_START_X && x <= GRID_START_X + 100 &&
+                y >= navY && y <= navY + 30) {
+                
+                if (current_page > 0) {
+                    current_page--;
+                    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                                    CELL_WIDTH, CELL_HEIGHT, current_page);
+                    drawNavigationControls(current_page, total_pages,
+                                          GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+                }
+            }
+            
+            // Botón "Siguiente"
+            if (x >= GRID_START_X + 350 && x <= GRID_START_X + 450 &&
+                y >= navY && y <= navY + 30) {
+                
+                if (current_page < total_pages - 1) {
+                    current_page++;
+                    displayDataInGrid(GRID_START_X, GRID_START_Y, GRID_ROWS, GRID_COLS, 
+                                    CELL_WIDTH, CELL_HEIGHT, current_page);
+                    drawNavigationControls(current_page, total_pages,
+                                          GRID_START_X, GRID_START_Y, CELL_HEIGHT);
+                }
+            }
+            
+            // Cualquier otro clic cierra la pantalla
+            if (y > WINDOW_HEIGHT - 40) {
+                done = true;
+            }
+        }
+        
+        delay(50);
+    }
+    
+    clear_work_area();
+    draw_menu();
 }

@@ -53,7 +53,7 @@ void load_data_from_file();
 int file_dialog(char* filename);
 
 // Funciones de visualización
-void display_data_grid(DataSet* data);
+void displayDataGrid();
 void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit);
 void plot_scatter(DataSet* data);
 void plot_histogram(DataSet* data, int num_classes);
