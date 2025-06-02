@@ -400,7 +400,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     free(sorted);
 }
 
-// Visualización de gráfica de puntos (dispersión) - ajustada para resolución menor
+// Visualización mejorada de gráfica de puntos (estilo horizontal con apilamiento)
 void plot_scatter(DataSet* data) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -410,12 +410,22 @@ void plot_scatter(DataSet* data) {
     
     clear_work_area();
     
-    // Área para el gráfico - márgenes reducidos para pantalla pequeña
-    int margin = 50;  // Reducido de 80 a 50
-    int x0 = margin; // Origen X
-    int y0 = WINDOW_HEIGHT - margin; // Origen Y
-    int width = WINDOW_WIDTH - 2 * margin;
-    int height = WINDOW_HEIGHT - 2 * margin - 40; // -40 para el menú superior
+    // Título
+    setcolor(RED);  // Título en rojo como en la imagen de referencia
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    settextjustify(LEFT_TEXT, TOP_TEXT);
+    outtextxy(50, 50, (char*)"Graficas de puntos");
+    
+    // Área para el gráfico - ajustada para maximizar el área visible
+    int margin_left = 60;    // Reducido para más espacio horizontal
+    int margin_right = 30;   // Reducido para más espacio horizontal
+    int margin_top = 100;    // Ajustado para dar más espacio arriba
+    int margin_bottom = 80;  // Ajustado para dar más espacio abajo
+    
+    int x0 = margin_left; // Origen X (izquierda)
+    int y0 = WINDOW_HEIGHT - margin_bottom; // Origen Y (abajo)
+    int width = WINDOW_WIDTH - margin_left - margin_right;
+    int height = 150; // Altura aumentada considerablemente para el área del gráfico
     
     // Encontrar valores mínimo y máximo
     double min_val = find_min(data);
@@ -423,38 +433,85 @@ void plot_scatter(DataSet* data) {
     
     // Ajustar rango para mejor visualización
     double range = max_val - min_val;
-    min_val -= range * 0.05;  // Reducido margen
-    max_val += range * 0.05;  // Reducido margen
+    min_val = floor(min_val - range * 0.05);
+    max_val = ceil(max_val + range * 0.05);
     
-    // Dibujar ejes
-    draw_axes(x0, y0, width, height, 0, data->count, min_val, max_val, 
-              (char*)"Indice", (char*)"Valor", (char*)"Grafica de Puntos");
-    
-    // Dibujar puntos - tamaño reducido para pantallas pequeñas
-    setcolor(APP_COLOR_DATA_POINT);
-    for (int i = 0; i < data->count; i++) {
-        int x = x0 + (i * width) / data->count;
-        int y = y0 - (int)(((data->data[i] - min_val) / (max_val - min_val)) * height);
-        
-        // Dibujar punto
-        setfillstyle(SOLID_FILL, APP_COLOR_DATA_POINT);
-        fillellipse(x, y, 3, 3);  // Tamaño reducido de 5,5 a 3,3
+    if (range == 0) { // Si todos los valores son iguales
+        min_val -= 1;
+        max_val += 1;
     }
     
-    // Mostrar estadísticas - compactas y en la parte superior
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
-    setcolor(APP_COLOR_TEXT);
+    // Dibujar fondo del gráfico - MUCHO MÁS GRANDE
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(x0-10, y0-height-10, x0+width+10, y0+10);
+    setcolor(BLACK);
+    rectangle(x0-10, y0-height-10, x0+width+10, y0+10);
     
-    char stats[100];
-    sprintf(stats, "Datos:%d Min:%.2f Max:%.2f Media:%.2f", 
-            data->count, find_min(data), find_max(data), find_mean(data));
-    outtextxy(50, 50, stats);  // Una sola línea con toda la info
+    // Dibujar eje horizontal
+    line(x0, y0, x0 + width, y0);
     
-    // Esperar un clic para continuar
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    setcolor(APP_COLOR_TEXT);
-    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
+    // Marcas y etiquetas en el eje X - TAMAÑO DE FUENTE AUMENTADO
+    int numXTicks = 6;  // Número de marcas en el eje X
+    int xPixelStep = width / numXTicks;
+    
+    // Crear marcas más visibles
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1); // Fuente más grande y clara
+    for (int i = 0; i <= numXTicks; i++) {
+        int x = x0 + i * xPixelStep;
+        line(x, y0, x, y0 + 5);  // Marca
+        
+        char tickLabel[20];
+        double value = min_val + i * ((max_val - min_val) / numXTicks);
+        sprintf(tickLabel, "%.0f", value);
+        settextjustify(CENTER_TEXT, TOP_TEXT);
+        outtextxy(x, y0 + 10, tickLabel); // Mayor separación para los números
+    }
+    
+    // Estructura para contar la frecuencia de cada valor
+    int num_bins = 200;  // Número de bins para discretización
+    int* frequencies = (int*)calloc(num_bins, sizeof(int));
+    double bin_width = (max_val - min_val) / num_bins;
+    
+    // Contar frecuencias por bin
+    for (int i = 0; i < data->count; i++) {
+        int bin = (int)((data->data[i] - min_val) / bin_width);
+        if (bin >= num_bins) bin = num_bins - 1; 
+        if (bin < 0) bin = 0;  // Para valores que puedan estar justo por debajo del mínimo ajustado
+        frequencies[bin]++;
+    }
+    
+    // Encontrar la frecuencia máxima para escalar la altura de apilamiento
+    int max_freq = 0;
+    for (int i = 0; i < num_bins; i++) {
+        if (frequencies[i] > max_freq) {
+            max_freq = frequencies[i];
+        }
+    }
+    
+    int max_stack_height = height - 10; // Casi toda la altura disponible
+    
+    // Dibujar puntos agrupados por valor
+    setcolor(BLACK);
+    for (int b = 0; b < num_bins; b++) {
+        if (frequencies[b] > 0) {
+            // Calcular la posición X correspondiente al bin
+            double bin_value = min_val + (b + 0.5) * bin_width;
+            int x = x0 + (int)((bin_value - min_val) * width / (max_val - min_val));
+            
+            // Dibujar puntos apilados según su frecuencia
+            for (int f = 0; f < frequencies[b]; f++) {
+                // Calcular posición Y del punto - ajustado para más espacio vertical
+                int y = y0 - 5 - (f * max_stack_height / (max_freq * 1.2)); // Ajuste para no llegar al límite superior
+                
+                // Dibujar punto
+                setfillstyle(SOLID_FILL, BLACK);
+                fillellipse(x, y, 2, 2);
+            }
+        }
+    }
+    
+    // Liberar memoria
+    free(frequencies);
     
     while (!ismouseclick(WM_LBUTTONDOWN)) {
         delay(100);

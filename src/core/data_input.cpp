@@ -468,7 +468,7 @@ void load_data_from_file() {
     displayDataGrid();
 }
 
-// Nueva función para mostrar los datos cargados en una cuadrícula paginada
+// Función para mostrar los datos cargados en una cuadrícula paginada
 void displayDataGrid() {
     clear_work_area();
     
