@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "../../include/excel_c.h"
+#include "../../include/statistical.h"
 
 // Estructura para elementos de menú
 typedef struct {
@@ -480,9 +482,8 @@ int handle_menu_click(int x, int y) {
                 }
             }
         }
-        // NUEVO: Manejar clicks en submenú de estadísticos
         else if (active_menu == MENU_ESTADISTICOS) {
-            // Verificar si se hizo clic en la opción "Calcular"
+            // Verificar clicks en el submenú de estadísticos
             for (int i = 0; i < sizeof(stats_submenu) / sizeof(MenuItem); i++) {
                 if (x >= stats_submenu[i].x1 && x <= stats_submenu[i].x2 &&
                     y >= stats_submenu[i].y1 && y <= stats_submenu[i].y2) {
@@ -514,32 +515,117 @@ int handle_menu_click(int x, int y) {
                             setcolor(RED);
                             settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
                             settextjustify(CENTER_TEXT, CENTER_TEXT);
-                            outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"No hay datos para calcular estadisticos");
+                            outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"No hay datos para calcular estadísticos");
                             outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"Cargue datos primero");
                             delay(2000);
                             clear_work_area();
                             return 0;
                         }
                         
-                        // Mostrar mensaje provisional para las futuras funciones
-                        setcolor(BLUE);
-                        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
-                        settextjustify(CENTER_TEXT, CENTER_TEXT);
-                        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)calc_submenu[i].title);
-                        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"(Funcion en desarrollo)");
-                        delay(1500);
-                        clear_work_area();
-                        
-                        // Retornar la acción correspondiente
+                        // Ejecutar la función correspondiente
                         switch (i) {
-                            case 0: return ACTION_STATS_MEAN;
-                            case 1: return ACTION_STATS_MEDIAN;
-                            case 2: return ACTION_STATS_MODE;
-                            case 3: return ACTION_STATS_TRIMMED_MEAN;
-                            case 4: return ACTION_STATS_VAR_SAMPLE;
-                            case 5: return ACTION_STATS_VAR_POP;
-                            case 6: return ACTION_STATS_STDEV_SAMPLE;
-                            case 7: return ACTION_STATS_STDEV_POP;
+                            case 0: // Media
+                                {
+                                    StatResult result = calc_mean(&current_data);
+                                    setcolor(APP_COLOR_TITLE);
+                                    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                                    settextjustify(CENTER_TEXT, TOP_TEXT);
+                                    outtextxy(WINDOW_WIDTH/2, 50, (char*)"Resultado - Media");
+                                    display_stat_result(result, 100);
+                                    
+                                    // Botón para volver
+                                    int btnWidth = 150;
+                                    int btnHeight = 40;
+                                    int btnX = (WINDOW_WIDTH - btnWidth) / 2;
+                                    int btnY = 200;
+                                    
+                                    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                                    bar(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    setcolor(WHITE);
+                                    rectangle(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                    outtextxy(btnX + btnWidth/2, btnY + btnHeight/2, (char*)"Volver");
+                                    
+                                    // Esperar clic para continuar
+                                    while (!ismouseclick(WM_LBUTTONDOWN)) {
+                                        delay(50);
+                                    }
+                                    clearmouseclick(WM_LBUTTONDOWN);
+                                }
+                                return ACTION_STATS_MEAN;
+                                
+                            case 1: // Mediana
+                                {
+                                    StatResult result = calc_median(&current_data);
+                                    setcolor(APP_COLOR_TITLE);
+                                    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                                    settextjustify(CENTER_TEXT, TOP_TEXT);
+                                    outtextxy(WINDOW_WIDTH/2, 50, (char*)"Resultado - Mediana");
+                                    display_stat_result(result, 100);
+                                    
+                                    // Botón para volver
+                                    int btnWidth = 150;
+                                    int btnHeight = 40;
+                                    int btnX = (WINDOW_WIDTH - btnWidth) / 2;
+                                    int btnY = 200;
+                                    
+                                    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                                    bar(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    setcolor(WHITE);
+                                    rectangle(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                    outtextxy(btnX + btnWidth/2, btnY + btnHeight/2, (char*)"Volver");
+                                    
+                                    // Esperar clic para continuar
+                                    while (!ismouseclick(WM_LBUTTONDOWN)) {
+                                        delay(50);
+                                    }
+                                    clearmouseclick(WM_LBUTTONDOWN);
+                                }
+                                return ACTION_STATS_MEDIAN;
+                                
+                            case 2: // Moda
+                                {
+                                    StatResult result = calc_mode(&current_data);
+                                    setcolor(APP_COLOR_TITLE);
+                                    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                                    settextjustify(CENTER_TEXT, TOP_TEXT);
+                                    outtextxy(WINDOW_WIDTH/2, 50, (char*)"Resultado - Moda");
+                                    display_stat_result(result, 100);
+                                    
+                                    // Botón para volver
+                                    int btnWidth = 150;
+                                    int btnHeight = 40;
+                                    int btnX = (WINDOW_WIDTH - btnWidth) / 2;
+                                    int btnY = 200;
+                                    
+                                    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                                    bar(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    setcolor(WHITE);
+                                    rectangle(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+                                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                    outtextxy(btnX + btnWidth/2, btnY + btnHeight/2, (char*)"Volver");
+                                    
+                                    // Esperar clic para continuar
+                                    while (!ismouseclick(WM_LBUTTONDOWN)) {
+                                        delay(50);
+                                    }
+                                    clearmouseclick(WM_LBUTTONDOWN);
+                                }
+                                return ACTION_STATS_MODE;
+                                
+                            case 3: // Media recortada
+                                show_trimmed_mean_options();
+                                return ACTION_STATS_TRIMMED_MEAN;
+                                
+                            case 4: // Varianza (muestra)
+                            case 5: // Varianza (población)
+                            case 6: // Desv. Est. (muestra)
+                            case 7: // Desv. Est. (población)
+                                show_dispersion_stats();
+                                return i == 4 ? ACTION_STATS_VAR_SAMPLE : 
+                                    i == 5 ? ACTION_STATS_VAR_POP : 
+                                    i == 6 ? ACTION_STATS_STDEV_SAMPLE : ACTION_STATS_STDEV_POP;
                         }
                     }
                 }
@@ -731,4 +817,396 @@ void show_developer_profile() {
     
     // Limpiar área al salir
     clear_work_area();
+}
+
+// Función para mostrar interfaz de Media Recortada con opción de porcentaje o cantidad
+void show_trimmed_mean_options() {
+    clear_work_area();
+    
+    // Variables para opciones
+    int selected_option = 0; // 0 = porcentaje, 1 = cantidad
+    double percentage = 10.0; // Porcentaje predeterminado
+    int count = 1; // Cantidad predeterminada
+    
+    char title[100];
+    sprintf(title, "Media Recortada - Seleccion de Metodo");
+    
+    // Dibujar interfaz
+    setcolor(APP_COLOR_TITLE);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    outtextxy(WINDOW_WIDTH/2, 50, title);
+    
+    // Opciones de método
+    settextjustify(LEFT_TEXT, CENTER_TEXT);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+    
+    int radioY1 = 120;
+    int radioY2 = 160;
+    int radioX = 100;
+    
+    // Círculos de radio button
+    setcolor(BLACK);
+    setfillstyle(SOLID_FILL, selected_option == 0 ? BLUE : WHITE);
+    fillellipse(radioX, radioY1, 8, 8);
+    circle(radioX, radioY1, 8);
+    
+    setfillstyle(SOLID_FILL, selected_option == 1 ? BLUE : WHITE);
+    fillellipse(radioX, radioY2, 8, 8);
+    circle(radioX, radioY2, 8);
+    
+    // Etiquetas
+    setcolor(BLACK);
+    outtextxy(radioX + 20, radioY1, (char*)"Por porcentaje (%)");
+    outtextxy(radioX + 20, radioY2, (char*)"Por cantidad de valores");
+    
+    // Campos para valores
+    char percent_text[20], count_text[20];
+    sprintf(percent_text, "%.1f%%", percentage);
+    sprintf(count_text, "%d", count);
+    
+    // Dibujar campos y valores
+    // Campo porcentaje
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+    rectangle(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+    setcolor(selected_option == 0 ? BLACK : DARKGRAY);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(radioX + 230, radioY1, percent_text);
+    
+    // Campo cantidad
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+    rectangle(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+    setcolor(selected_option == 1 ? BLACK : DARKGRAY);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(radioX + 230, radioY2, count_text);
+    
+    // Botones para ajustar valores
+    // Porcentaje
+    int btnX1 = radioX + 270;
+    int btnX2 = radioX + 290;
+    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+    bar(btnX1, radioY1 - 15, btnX2, radioY1);
+    bar(btnX1, radioY1, btnX2, radioY1 + 15);
+    setcolor(WHITE);
+    rectangle(btnX1, radioY1 - 15, btnX2, radioY1);
+    rectangle(btnX1, radioY1, btnX2, radioY1 + 15);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(btnX1 + 10, radioY1 - 8, (char*)"+");
+    outtextxy(btnX1 + 10, radioY1 + 7, (char*)"-");
+    
+    // Cantidad
+    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+    bar(btnX1, radioY2 - 15, btnX2, radioY2);
+    bar(btnX1, radioY2, btnX2, radioY2 + 15);
+    setcolor(WHITE);
+    rectangle(btnX1, radioY2 - 15, btnX2, radioY2);
+    rectangle(btnX1, radioY2, btnX2, radioY2 + 15);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(btnX1 + 10, radioY2 - 8, (char*)"+");
+    outtextxy(btnX1 + 10, radioY2 + 7, (char*)"-");
+    
+    // Botón calcular
+    int calcBtnWidth = 150;
+    int calcBtnHeight = 40;
+    int calcBtnX = (WINDOW_WIDTH - calcBtnWidth) / 2;
+    int calcBtnY = 240;
+    
+    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+    bar(calcBtnX, calcBtnY, calcBtnX + calcBtnWidth, calcBtnY + calcBtnHeight);
+    setcolor(WHITE);
+    rectangle(calcBtnX, calcBtnY, calcBtnX + calcBtnWidth, calcBtnY + calcBtnHeight);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(calcBtnX + calcBtnWidth/2, calcBtnY + calcBtnHeight/2, (char*)"Calcular");
+    
+    // Botón cancelar
+    int cancelBtnY = calcBtnY + calcBtnHeight + 20;
+    setfillstyle(SOLID_FILL, COLOR(200, 100, 100));
+    bar(calcBtnX, cancelBtnY, calcBtnX + calcBtnWidth, cancelBtnY + calcBtnHeight);
+    setcolor(WHITE);
+    rectangle(calcBtnX, cancelBtnY, calcBtnX + calcBtnWidth, cancelBtnY + calcBtnHeight);
+    outtextxy(calcBtnX + calcBtnWidth/2, cancelBtnY + calcBtnHeight/2, (char*)"Cancelar");
+    
+    // Esperar clic y procesar selección
+    while (1) {
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int x, y;
+            getmouseclick(WM_LBUTTONDOWN, x, y);
+            
+            // Verificar radio buttons
+            if (pow(x - radioX, 2) + pow(y - radioY1, 2) <= 64) { // Área del círculo para opción porcentaje
+                selected_option = 0;
+                // Redibujar radio buttons
+                setfillstyle(SOLID_FILL, BLUE);
+                fillellipse(radioX, radioY1, 8, 8);
+                setfillstyle(SOLID_FILL, WHITE);
+                fillellipse(radioX, radioY2, 8, 8);
+                
+                // Actualizar color de texto
+                setcolor(BLACK);
+                settextjustify(CENTER_TEXT, CENTER_TEXT);
+                outtextxy(radioX + 230, radioY1, percent_text);
+                setcolor(DARKGRAY);
+                outtextxy(radioX + 230, radioY2, count_text);
+            }
+            else if (pow(x - radioX, 2) + pow(y - radioY2, 2) <= 64) { // Área del círculo para opción cantidad
+                selected_option = 1;
+                // Redibujar radio buttons
+                setfillstyle(SOLID_FILL, WHITE);
+                fillellipse(radioX, radioY1, 8, 8);
+                setfillstyle(SOLID_FILL, BLUE);
+                fillellipse(radioX, radioY2, 8, 8);
+                
+                // Actualizar color de texto
+                setcolor(DARKGRAY);
+                settextjustify(CENTER_TEXT, CENTER_TEXT);
+                outtextxy(radioX + 230, radioY1, percent_text);
+                setcolor(BLACK);
+                outtextxy(radioX + 230, radioY2, count_text);
+            }
+            
+            // Botones para ajustar porcentaje
+            else if (x >= btnX1 && x <= btnX2 && y >= radioY1 - 15 && y <= radioY1) { // + porcentaje
+                if (percentage < 40.0) {
+                    percentage += 5.0;
+                    sprintf(percent_text, "%.1f%%", percentage);
+                    
+                    // Actualizar valor en pantalla
+                    setfillstyle(SOLID_FILL, WHITE);
+                    bar(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+                    rectangle(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+                    setcolor(selected_option == 0 ? BLACK : DARKGRAY);
+                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                    outtextxy(radioX + 230, radioY1, percent_text);
+                }
+            }
+            else if (x >= btnX1 && x <= btnX2 && y > radioY1 && y <= radioY1 + 15) { // - porcentaje
+                if (percentage > 5.0) {
+                    percentage -= 5.0;
+                    sprintf(percent_text, "%.1f%%", percentage);
+                    
+                    // Actualizar valor en pantalla
+                    setfillstyle(SOLID_FILL, WHITE);
+                    bar(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+                    rectangle(radioX + 200, radioY1 - 15, radioX + 260, radioY1 + 15);
+                    setcolor(selected_option == 0 ? BLACK : DARKGRAY);
+                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                    outtextxy(radioX + 230, radioY1, percent_text);
+                }
+            }
+            
+            // Botones para ajustar cantidad
+            else if (x >= btnX1 && x <= btnX2 && y >= radioY2 - 15 && y <= radioY2) { // + cantidad
+                if (count < current_data.count / 2 - 1) {
+                    count++;
+                    sprintf(count_text, "%d", count);
+                    
+                    // Actualizar valor en pantalla
+                    setfillstyle(SOLID_FILL, WHITE);
+                    bar(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+                    rectangle(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+                    setcolor(selected_option == 1 ? BLACK : DARKGRAY);
+                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                    outtextxy(radioX + 230, radioY2, count_text);
+                }
+            }
+            else if (x >= btnX1 && x <= btnX2 && y > radioY2 && y <= radioY2 + 15) { // - cantidad
+                if (count > 1) {
+                    count--;
+                    sprintf(count_text, "%d", count);
+                    
+                    // Actualizar valor en pantalla
+                    setfillstyle(SOLID_FILL, WHITE);
+                    bar(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+                    rectangle(radioX + 200, radioY2 - 15, radioX + 260, radioY2 + 15);
+                    setcolor(selected_option == 1 ? BLACK : DARKGRAY);
+                    settextjustify(CENTER_TEXT, CENTER_TEXT);
+                    outtextxy(radioX + 230, radioY2, count_text);
+                }
+            }
+            
+            // Botón calcular
+            else if (x >= calcBtnX && x <= calcBtnX + calcBtnWidth && 
+                     y >= calcBtnY && y <= calcBtnY + calcBtnHeight) {
+                
+                clear_work_area();
+                StatResult result;
+                
+                // Calcular según el método seleccionado
+                if (selected_option == 0) { // Por porcentaje
+                    result = calc_trimmed_mean(&current_data, percentage);
+                } else { // Por cantidad
+                    result = calc_trimmed_mean_by_count(&current_data, count);
+                }
+                
+                // Mostrar resultado
+                setcolor(APP_COLOR_TITLE);
+                settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                settextjustify(CENTER_TEXT, TOP_TEXT);
+                outtextxy(WINDOW_WIDTH/2, 50, (char*)"Resultado - Media Recortada");
+                
+                // Mostrar el resultado con la función auxiliar
+                display_stat_result(result, 100);
+                
+                // Botón volver
+                setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                bar(calcBtnX, cancelBtnY, calcBtnX + calcBtnWidth, cancelBtnY + calcBtnHeight);
+                setcolor(WHITE);
+                rectangle(calcBtnX, cancelBtnY, calcBtnX + calcBtnWidth, cancelBtnY + calcBtnHeight);
+                settextjustify(CENTER_TEXT, CENTER_TEXT);
+                outtextxy(calcBtnX + calcBtnWidth/2, cancelBtnY + calcBtnHeight/2, (char*)"Volver");
+                
+                // Esperar clic para volver
+                while (1) {
+                    if (ismouseclick(WM_LBUTTONDOWN)) {
+                        getmouseclick(WM_LBUTTONDOWN, x, y);
+                        if (x >= calcBtnX && x <= calcBtnX + calcBtnWidth && 
+                            y >= cancelBtnY && y <= cancelBtnY + calcBtnHeight) {
+                            clear_work_area();
+                            return;
+                        }
+                    }
+                    delay(50);
+                }
+                
+                return;
+            }
+            
+            // Botón cancelar
+            else if (x >= calcBtnX && x <= calcBtnX + calcBtnWidth && 
+                     y >= cancelBtnY && y <= cancelBtnY + calcBtnHeight) {
+                clear_work_area();
+                return;
+            }
+        }
+        
+        delay(50);
+    }
+}
+
+// Función para mostrar resultados de cálculos estadísticos básicos
+void show_basic_stats() {
+    if (!current_data.is_loaded || current_data.count == 0) {
+        setcolor(RED);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"No hay datos para calcular");
+        delay(2000);
+        clear_work_area();
+        return;
+    }
+    
+    clear_work_area();
+    
+    // Título
+    setcolor(APP_COLOR_TITLE);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    outtextxy(WINDOW_WIDTH/2, 50, (char*)"Estadísticas Básicas");
+    
+    // Calcular y mostrar Media
+    StatResult mean_result = calc_mean(&current_data);
+    display_stat_result(mean_result, 100);
+    
+    // Calcular y mostrar Mediana
+    StatResult median_result = calc_median(&current_data);
+    display_stat_result(median_result, 170);
+    
+    // Calcular y mostrar Moda
+    StatResult mode_result = calc_mode(&current_data);
+    display_stat_result(mode_result, 240);
+    
+    // Botón para volver
+    int btnWidth = 150;
+    int btnHeight = 40;
+    int btnX = (WINDOW_WIDTH - btnWidth) / 2;
+    int btnY = 320;
+    
+    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+    bar(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+    setcolor(WHITE);
+    rectangle(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(btnX + btnWidth/2, btnY + btnHeight/2, (char*)"Volver");
+    
+    // Esperar clic en botón
+    while (1) {
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int x, y;
+            getmouseclick(WM_LBUTTONDOWN, x, y);
+            
+            if (x >= btnX && x <= btnX + btnWidth && 
+                y >= btnY && y <= btnY + btnHeight) {
+                clear_work_area();
+                return;
+            }
+        }
+        delay(50);
+    }
+}
+
+// Función para mostrar resultados de varianza y desviación estándar
+void show_dispersion_stats() {
+    if (!current_data.is_loaded || current_data.count == 0) {
+        setcolor(RED);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"No hay datos para calcular");
+        delay(2000);
+        clear_work_area();
+        return;
+    }
+    
+    clear_work_area();
+    
+    // Título
+    setcolor(APP_COLOR_TITLE);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    outtextxy(WINDOW_WIDTH/2, 20, (char*)"Medidas de Dispersion");
+    
+    // Calcular y mostrar Varianza (muestra)
+    StatResult var_sample_result = calc_variance_sample(&current_data);
+    display_stat_result(var_sample_result, 70);
+    
+    // Calcular y mostrar Desviación Estándar (muestra)
+    StatResult stddev_sample_result = calc_stddev_sample(&current_data);
+    display_stat_result(stddev_sample_result, 140);
+    
+    // Calcular y mostrar Varianza (población)
+    StatResult var_pop_result = calc_variance_population(&current_data);
+    display_stat_result(var_pop_result, 210);
+    
+    // Calcular y mostrar Desviación Estándar (población)
+    StatResult stddev_pop_result = calc_stddev_population(&current_data);
+    display_stat_result(stddev_pop_result, 280);
+    
+    // Botón para volver
+    int btnWidth = 150;
+    int btnHeight = 40;
+    int btnX = (WINDOW_WIDTH - btnWidth) / 2;
+    int btnY = 350;
+    
+    setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+    bar(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+    setcolor(WHITE);
+    rectangle(btnX, btnY, btnX + btnWidth, btnY + btnHeight);
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    outtextxy(btnX + btnWidth/2, btnY + btnHeight/2, (char*)"Volver");
+    
+    // Esperar clic en botón
+    while (1) {
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int x, y;
+            getmouseclick(WM_LBUTTONDOWN, x, y);
+            
+            if (x >= btnX && x <= btnX + btnWidth && 
+                y >= btnY && y <= btnY + btnHeight) {
+                clear_work_area();
+                return;
+            }
+        }
+        delay(50);
+    }
 }

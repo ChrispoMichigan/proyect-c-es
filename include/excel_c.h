@@ -3,6 +3,9 @@
 
 #include <graphics.h>
 
+// Incluir statistical.h después de nuestras definiciones
+// para evitar conflictos
+
 // Constantes generales
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
@@ -18,7 +21,7 @@
 #define APP_COLOR_DATA_POINT GREEN
 #define APP_COLOR_HISTOGRAM_BAR CYAN
 
-// Colores adicionales para la interfaz (NUEVO - con nombres modificados)
+// Colores adicionales para la interfaz
 #define APP_COLOR_TITLE COLOR(0, 100, 180)
 #define APP_COLOR_SUBTITLE COLOR(80, 80, 80)
 #define APP_COLOR_TEXT_DARK COLOR(40, 40, 40)
@@ -26,20 +29,15 @@
 #define APP_COLOR_BUTTON COLOR(70, 130, 180)
 #define APP_COLOR_BUTTON_HOVER COLOR(100, 160, 210)
 
-// Estructura de datos
-typedef struct {
-    double data[MAX_DATA_POINTS];
-    int count;
-    char source[MAX_FILENAME_LEN];
-    int is_loaded;
-} DataSet;
+// Incluir statistical.h aquí para usar su definición de DataSet
+#include "statistical.h"
 
-// Estructura para botón interactivo (NUEVO)
+// Estructura para botón interactivo
 typedef struct {
     int x1, y1, x2, y2;
     char text[50];
     int is_hover;
-} UIButton;  // Cambiado de Button a UIButton para evitar conflictos
+} UIButton;
 
 // Tipos de gráficos
 typedef enum {
@@ -47,7 +45,7 @@ typedef enum {
     GRAPH_STEM_LEAF,
     GRAPH_SCATTER,
     GRAPH_HISTOGRAM,
-    GRAPH_REGRESSION  // NUEVO: Añadido tipo para regresión lineal
+    GRAPH_REGRESSION
 } GraphType;
 
 // Variable global para datos actuales
@@ -75,34 +73,18 @@ void plot_scatter(DataSet* data);
 void plot_histogram(DataSet* data, int num_classes);
 void plot_regression(DataSet* data);
 
-// Funciones de estadísticos (NUEVO)
-double calc_mean(DataSet* data);
-double calc_median(DataSet* data);
-double calc_mode(DataSet* data);
-double calc_trimmed_mean(DataSet* data, double percentage);
-double calc_var_sample(DataSet* data, int *num_ops, double *proc_time);
-double calc_var_population(DataSet* data, int *num_ops, double *proc_time);
-double calc_stdev_sample(DataSet* data, int *num_ops, double *proc_time);
-double calc_stdev_population(DataSet* data, int *num_ops, double *proc_time);
-
-// Funciones para tablas estadísticas (NUEVO)
-double calc_alpha_z(double z_value);
-double find_z_from_alpha(double alpha);
-double find_t_value(int degrees_freedom, double alpha);
-void find_df_alpha_from_t(double t_value, double *df, double *alpha);
-
-// Funciones para créditos y UI mejorada (NUEVO)
-void show_developer_profile();
-void draw_ui_button(UIButton* btn);  // Cambiado el nombre a draw_ui_button
-int is_point_in_button(UIButton* btn, int x, int y);  // Actualizado para UIButton
-void open_url(const char* url);
-
 // Utilidades
 void clear_work_area();
 double* sort_data(DataSet* data);
 double find_min(DataSet* data);
 double find_max(DataSet* data);
 double find_mean(DataSet* data);
+
+// Funciones para créditos y UI mejorada
+void show_developer_profile();
+void draw_ui_button(UIButton* btn);
+int is_point_in_button(UIButton* btn, int x, int y);
+void open_url(const char* url);
 
 // Funciones auxiliares para visualización de datos
 void drawDataGrid(int startX, int startY, int rows, int cols, int cellWidth, int cellHeight);
