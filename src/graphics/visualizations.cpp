@@ -519,7 +519,7 @@ void plot_scatter(DataSet* data) {
     clearmouseclick(WM_LBUTTONDOWN);
 }
 
-// Visualización de histograma - ajustada para resolución menor
+// Visualización de histograma mejorada con números más grandes
 void plot_histogram(DataSet* data, int num_classes) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -529,10 +529,10 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     clear_work_area();
     
-    // Diálogo para número de clases - ajustado para pantalla pequeña
+    // Diálogo para número de clases
     setcolor(APP_COLOR_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
-    outtextxy(100, 80, (char*)"Numero de clases:");  // Posición X e Y reducidas
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2); 
+    outtextxy(100, 80, (char*)"Numero de clases:");
     
     // Mostrar el número actual
     char num_str[10];
@@ -548,6 +548,7 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     setcolor(APP_COLOR_TEXT);
     settextjustify(CENTER_TEXT, CENTER_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
     outtextxy(btnX, btnY+15, num_str);
     
     // Botones + y - con posiciones relativas
@@ -574,7 +575,7 @@ void plot_histogram(DataSet* data, int num_classes) {
             
             // Verificar si se hizo clic en +
             if (x >= btnX+35 && x <= btnX+65 && y >= btnY && y <= btnY+30) {
-                if (num_classes < 15) {  // Máximo reducido para pantalla pequeña
+                if (num_classes < 15) {
                     num_classes++;
                     sprintf(num_str, "%d", num_classes);
                     
@@ -608,14 +609,18 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     clear_work_area();
     
-    // Área para el gráfico - márgenes reducidos para pantalla pequeña
-    int margin = 50;  // Reducido de 80 a 50
-    int x0 = margin; // Origen X
-    int y0 = WINDOW_HEIGHT - margin; // Origen Y
-    int width = WINDOW_WIDTH - 2 * margin;
-    int height = WINDOW_HEIGHT - 2 * margin - 40; // -40 para el menú superior
+    // Área para el gráfico - ajustada para mejor visualización
+    int margin_top = 60;
+    int margin_bottom = 60;
+    int margin_left = 60;
+    int margin_right = 40;
     
-    // Cálculos de datos para el histograma (sin cambios)
+    int x0 = margin_left; // Origen X
+    int y0 = WINDOW_HEIGHT - margin_bottom; // Origen Y
+    int width = WINDOW_WIDTH - margin_left - margin_right;
+    int height = WINDOW_HEIGHT - margin_top - margin_bottom;
+    
+    // Cálculos de datos para el histograma
     double* sorted = sort_data(data);
     double min_val = sorted[0];
     double max_val = sorted[data->count - 1];
@@ -642,18 +647,62 @@ void plot_histogram(DataSet* data, int num_classes) {
         }
     }
     
-    // Dibujar ejes
+    // Preparar área para el gráfico
+    setfillstyle(SOLID_FILL, COLOR(248, 248, 255)); // Fondo suave
+    bar(x0-10, y0-height-10, x0+width+10, y0+40); // Área extendida para las etiquetas
+    setcolor(LIGHTGRAY);
+    rectangle(x0-10, y0-height-10, x0+width+10, y0+40);
+    
+    // Dibujar título
     char title[50];
     sprintf(title, "Histograma (%d clases)", num_classes);
-    draw_axes(x0, y0, width, height, min_val, max_val, 0, max_freq * 1.1, 
-              (char*)"Valor", (char*)"Frecuencia", title);
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    setcolor(BLUE);
+    outtextxy(x0 + width/2, y0-height-20, title);
     
-    // Dibujar barras - ajustar ancho para pantalla pequeña
-    int bar_width = (width / num_classes) - 1;  // -1 para separación
+    // Dibujar líneas de cuadrícula suaves
+    setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);
+    setcolor(LIGHTGRAY);
+    
+    // Líneas horizontales
+    int numYTicks = 5;
+    int yPixelStep = height / numYTicks;
+    for (int i = 0; i <= numYTicks; i++) {
+        int y = y0 - i * yPixelStep;
+        line(x0, y, x0 + width, y);
+        
+        // Etiquetas del eje Y (frecuencia)
+        if (i > 0) { // Evitar el 0 para evitar superposición
+            char tickLabel[20];
+            sprintf(tickLabel, "%.1f", (max_freq * 1.1) * i / numYTicks);
+            settextjustify(RIGHT_TEXT, CENTER_TEXT);
+            settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+            setcolor(DARKGRAY);
+            outtextxy(x0 - 5, y, tickLabel);
+        }
+    }
+    
+    // Líneas verticales más sutiles entre las barras
+    for (int i = 0; i <= num_classes; i++) {
+        int x = x0 + (i * width) / num_classes;
+        line(x, y0, x, y0 - height);
+    }
+    
+    // Restaurar estilo de línea
+    setlinestyle(SOLID_LINE, 0, NORM_WIDTH);
+    
+    // Ejes principales
+    setcolor(BLACK);
+    line(x0, y0, x0 + width, y0); // Eje X
+    line(x0, y0, x0, y0 - height); // Eje Y
+    
+    // Dibujar barras
+    int bar_width = (width / num_classes) - 2; // Espacio para separación
     
     for (int i = 0; i < num_classes; i++) {
         double class_start = min_val + i * class_width;
-        int x = x0 + (i * width) / num_classes;
+        int x = x0 + (i * width) / num_classes + 1; // +1 para separación
         int bar_height = (frequencies[i] * height) / (max_freq * 1.1);
         
         // Dibujar barra
@@ -664,33 +713,35 @@ void plot_histogram(DataSet* data, int num_classes) {
         setcolor(BLACK);
         rectangle(x, y0 - bar_height, x + bar_width, y0);
         
-        // Mostrar frecuencia encima de la barra solo si hay espacio
+        // Mostrar frecuencia encima de la barra 
         if (frequencies[i] > 0 && bar_height > 15) {
             char freq_str[10];
             sprintf(freq_str, "%d", frequencies[i]);
             settextjustify(CENTER_TEXT, BOTTOM_TEXT);
-            settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
+            settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+            setcolor(BLACK);
             outtextxy(x + bar_width/2, y0 - bar_height - 2, freq_str);
+        }
+        
+        // Etiqueta del eje X 
+        if (i % (num_classes > 7 ? 2 : 1) == 0) { // Mostrar cada etiqueta o cada 2 si hay muchas
+            char label[20];
+            sprintf(label, "%.1f", class_start);
+            settextjustify(CENTER_TEXT, TOP_TEXT);
+            settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+            setcolor(BLACK);
+            outtextxy(x + bar_width/2, y0 + 5, label);
         }
     }
     
-    // Mostrar estadísticas - compactas para pantalla pequeña
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
-    setcolor(APP_COLOR_TEXT);
-    
-    char stats[100];
-    sprintf(stats, "Datos:%d Ancho:%.2f Min:%.2f Max:%.2f", 
-            data->count, class_width, min_val, max_val);
-    outtextxy(50, 50, stats);
+    // Etiqueta del eje X
+    settextjustify(CENTER_TEXT, TOP_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    setcolor(BLACK);
+    outtextxy(x0 + width/2, y0 + 35, (char*)"Valor");
     
     free(sorted);
     free(frequencies);
-    
-    // Esperar un clic para continuar
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    setcolor(APP_COLOR_TEXT);
-    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
     
     while (!ismouseclick(WM_LBUTTONDOWN)) {
         delay(100);
