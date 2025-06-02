@@ -5,6 +5,7 @@
 #include <math.h>
 #include "../../include/excel_c.h"
 #include "../../include/statistical.h"
+#include "../../include/tables.h"
 
 // Estructura para elementos de menú
 typedef struct {
@@ -631,8 +632,8 @@ int handle_menu_click(int x, int y) {
                 }
             }
         }
-        // NUEVO: Manejar clicks en submenú de tablas
         else if (active_menu == MENU_TABLAS) {
+            // Verificar clicks en el submenú de tablas
             for (int i = 0; i < sizeof(tables_submenu) / sizeof(MenuItem); i++) {
                 if (x >= tables_submenu[i].x1 && x <= tables_submenu[i].x2 &&
                     y >= tables_submenu[i].y1 && y <= tables_submenu[i].y2) {
@@ -644,22 +645,462 @@ int handle_menu_click(int x, int y) {
                     // Limpiar área de trabajo
                     clear_work_area();
                     
-                    // Mostrar mensaje provisional
-                    setcolor(BLUE);
-                    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
-                    settextjustify(CENTER_TEXT, CENTER_TEXT);
-                    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)tables_submenu[i].title);
-                    outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"(Funcion en desarrollo)");
-                    delay(1500);
-                    clear_work_area();
-                    
-                    // Retornar la acción correspondiente
+                    // Ejecutar la función correspondiente
                     switch (i) {
-                        case 0: return ACTION_TABLES_ALPHA_Z;
-                        case 1: return ACTION_TABLES_Z_ALPHA;
-                        case 2: return ACTION_TABLES_FIND_T;
-                        case 3: return ACTION_TABLES_T_PARAMS;
+                        case 0: // Calcular Alpha (tabla Z)
+                        {
+                            // Interfaz para solicitar el valor de Z
+                            setcolor(APP_COLOR_TITLE);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 50, (char*)"Calcular Alpha (tabla Z)");
+                            
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            outtextxy(WINDOW_WIDTH/2, 100, (char*)"Introduzca el valor de Z:");
+                            
+                            // Campo de entrada para Z
+                            char z_value_str[20] = "0.00";
+                            double z_value = 0.0;
+                            
+                            // Dibujar campo de entrada
+                            int input_width = 100;
+                            int input_height = 30;
+                            int input_x = WINDOW_WIDTH/2 - input_width/2;
+                            int input_y = 130;
+                            
+                            setfillstyle(SOLID_FILL, WHITE);
+                            bar(input_x, input_y, input_x + input_width, input_y + input_height);
+                            rectangle(input_x, input_y, input_x + input_width, input_y + input_height);
+                            
+                            settextjustify(CENTER_TEXT, CENTER_TEXT);
+                            outtextxy(input_x + input_width/2, input_y + input_height/2, z_value_str);
+                            
+                            // Botones + y -
+                            int btn_width = 30;
+                            int btn_height = 30;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            rectangle(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            outtextxy(input_x - btn_width/2 - 10, input_y + btn_height/2, (char*)"-");
+                            
+                            bar(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            rectangle(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            outtextxy(input_x + input_width + btn_width/2 + 10, input_y + btn_height/2, (char*)"+");
+                            
+                            // Botón calcular
+                            int calc_btn_width = 120;
+                            int calc_btn_height = 40;
+                            int calc_btn_x = WINDOW_WIDTH/2 - calc_btn_width/2;
+                            int calc_btn_y = 180;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            rectangle(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            outtextxy(calc_btn_x + calc_btn_width/2, calc_btn_y + calc_btn_height/2, (char*)"Calcular");
+                            
+                            // Esperar clic o entrada de usuario
+                            while (1) {
+                                if (ismouseclick(WM_LBUTTONDOWN)) {
+                                    int mx, my;
+                                    getmouseclick(WM_LBUTTONDOWN, mx, my);
+                                    
+                                    // Botón -
+                                    if (mx >= input_x - btn_width - 10 && mx <= input_x - 10 &&
+                                        my >= input_y && my <= input_y + btn_height) {
+                                        z_value -= 0.1;
+                                        sprintf(z_value_str, "%.2f", z_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, z_value_str);
+                                    }
+                                    
+                                    // Botón +
+                                    else if (mx >= input_x + input_width + 10 && mx <= input_x + input_width + btn_width + 10 &&
+                                            my >= input_y && my <= input_y + btn_height) {
+                                        z_value += 0.1;
+                                        sprintf(z_value_str, "%.2f", z_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, z_value_str);
+                                    }
+                                    
+                                    // Botón calcular
+                                    else if (mx >= calc_btn_x && mx <= calc_btn_x + calc_btn_width &&
+                                            my >= calc_btn_y && my <= calc_btn_y + calc_btn_height) {
+                                        calculate_alpha_z(z_value);
+                                        break;
+                                    }
+                                }
+                                
+                                delay(50);
+                            }
+                        }
+                        break;
+                        
+                        case 1: // Encontrar Z dado Alpha
+                        {
+                            // Interfaz para solicitar el valor de Alpha
+                            setcolor(APP_COLOR_TITLE);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 50, (char*)"Encontrar Z dado Alpha");
+                            
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            outtextxy(WINDOW_WIDTH/2, 100, (char*)"Introduzca el valor de Alpha (0-1):");
+                            
+                            // Campo de entrada para Alpha
+                            char alpha_value_str[20] = "0.05";
+                            double alpha_value = 0.05;
+                            
+                            // Dibujar campo de entrada
+                            int input_width = 100;
+                            int input_height = 30;
+                            int input_x = WINDOW_WIDTH/2 - input_width/2;
+                            int input_y = 130;
+                            
+                            setfillstyle(SOLID_FILL, WHITE);
+                            bar(input_x, input_y, input_x + input_width, input_y + input_height);
+                            rectangle(input_x, input_y, input_x + input_width, input_y + input_height);
+                            
+                            settextjustify(CENTER_TEXT, CENTER_TEXT);
+                            outtextxy(input_x + input_width/2, input_y + input_height/2, alpha_value_str);
+                            
+                            // Botones + y -
+                            int btn_width = 30;
+                            int btn_height = 30;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            rectangle(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            outtextxy(input_x - btn_width/2 - 10, input_y + btn_height/2, (char*)"-");
+                            
+                            bar(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            rectangle(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            outtextxy(input_x + input_width + btn_width/2 + 10, input_y + btn_height/2, (char*)"+");
+                            
+                            // Botón calcular
+                            int calc_btn_width = 120;
+                            int calc_btn_height = 40;
+                            int calc_btn_x = WINDOW_WIDTH/2 - calc_btn_width/2;
+                            int calc_btn_y = 180;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            rectangle(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            outtextxy(calc_btn_x + calc_btn_width/2, calc_btn_y + calc_btn_height/2, (char*)"Calcular");
+                            
+                            // Esperar clic o entrada de usuario
+                            while (1) {
+                                if (ismouseclick(WM_LBUTTONDOWN)) {
+                                    int mx, my;
+                                    getmouseclick(WM_LBUTTONDOWN, mx, my);
+                                    
+                                    // Botón -
+                                    if (mx >= input_x - btn_width - 10 && mx <= input_x - 10 &&
+                                        my >= input_y && my <= input_y + btn_height) {
+                                        alpha_value -= 0.01;
+                                        if (alpha_value < 0.01) alpha_value = 0.01;
+                                        sprintf(alpha_value_str, "%.2f", alpha_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, alpha_value_str);
+                                    }
+                                    
+                                    // Botón +
+                                    else if (mx >= input_x + input_width + 10 && mx <= input_x + input_width + btn_width + 10 &&
+                                            my >= input_y && my <= input_y + btn_height) {
+                                        alpha_value += 0.01;
+                                        if (alpha_value > 0.99) alpha_value = 0.99;
+                                        sprintf(alpha_value_str, "%.2f", alpha_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, alpha_value_str);
+                                    }
+                                    
+                                    // Botón calcular
+                                    else if (mx >= calc_btn_x && mx <= calc_btn_x + calc_btn_width &&
+                                            my >= calc_btn_y && my <= calc_btn_y + calc_btn_height) {
+                                        find_z_from_alpha(alpha_value);
+                                        break;
+                                    }
+                                }
+                                
+                                delay(50);
+                            }
+                        }
+                        break;
+                        
+                        case 2: // Buscar en tabla T
+                        {
+                            // Interfaz para solicitar GL y Alpha
+                            setcolor(APP_COLOR_TITLE);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 50, (char*)"Buscar en Tabla T");
+                            
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            outtextxy(WINDOW_WIDTH/2, 100, (char*)"Introduzca Grados de Libertad (GL):");
+                            
+                            // Campo de entrada para GL
+                            char df_str[20] = "10";
+                            int df = 10;
+                            
+                            int input_width = 100;
+                            int input_height = 30;
+                            int input_x = WINDOW_WIDTH/2 - input_width/2;
+                            int input_y = 130;
+                            
+                            setfillstyle(SOLID_FILL, WHITE);
+                            bar(input_x, input_y, input_x + input_width, input_y + input_height);
+                            rectangle(input_x, input_y, input_x + input_width, input_y + input_height);
+                            
+                            settextjustify(CENTER_TEXT, CENTER_TEXT);
+                            outtextxy(input_x + input_width/2, input_y + input_height/2, df_str);
+                            
+                            // Botones + y - para GL
+                            int btn_width = 30;
+                            int btn_height = 30;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            rectangle(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            outtextxy(input_x - btn_width/2 - 10, input_y + btn_height/2, (char*)"-");
+                            
+                            bar(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            rectangle(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            outtextxy(input_x + input_width + btn_width/2 + 10, input_y + btn_height/2, (char*)"+");
+                            
+                            // Pedir Alpha
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            outtextxy(WINDOW_WIDTH/2, 180, (char*)"Introduzca Alpha (0-1):");
+                            
+                            // Campo de entrada para Alpha
+                            char alpha_str[20] = "0.05";
+                            double alpha = 0.05;
+                            
+                            int alpha_input_y = 210;
+                            
+                            setfillstyle(SOLID_FILL, WHITE);
+                            bar(input_x, alpha_input_y, input_x + input_width, alpha_input_y + input_height);
+                            rectangle(input_x, alpha_input_y, input_x + input_width, alpha_input_y + input_height);
+                            
+                            settextjustify(CENTER_TEXT, CENTER_TEXT);
+                            outtextxy(input_x + input_width/2, alpha_input_y + input_height/2, alpha_str);
+                            
+                            // Botones + y - para Alpha
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(input_x - btn_width - 10, alpha_input_y, input_x - 10, alpha_input_y + btn_height);
+                            rectangle(input_x - btn_width - 10, alpha_input_y, input_x - 10, alpha_input_y + btn_height);
+                            outtextxy(input_x - btn_width/2 - 10, alpha_input_y + btn_height/2, (char*)"-");
+                            
+                            bar(input_x + input_width + 10, alpha_input_y, input_x + input_width + btn_width + 10, alpha_input_y + btn_height);
+                            rectangle(input_x + input_width + 10, alpha_input_y, input_x + input_width + btn_width + 10, alpha_input_y + btn_height);
+                            outtextxy(input_x + input_width + btn_width/2 + 10, alpha_input_y + btn_height/2, (char*)"+");
+                            
+                            // Botón buscar
+                            int calc_btn_width = 120;
+                            int calc_btn_height = 40;
+                            int calc_btn_x = WINDOW_WIDTH/2 - calc_btn_width/2;
+                            int calc_btn_y = 260;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            rectangle(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            outtextxy(calc_btn_x + calc_btn_width/2, calc_btn_y + calc_btn_height/2, (char*)"Buscar");
+                            
+                            // Esperar clic o entrada de usuario
+                            while (1) {
+                                if (ismouseclick(WM_LBUTTONDOWN)) {
+                                    int mx, my;
+                                    getmouseclick(WM_LBUTTONDOWN, mx, my);
+                                    
+                                    // Botón - para GL
+                                    if (mx >= input_x - btn_width - 10 && mx <= input_x - 10 &&
+                                        my >= input_y && my <= input_y + btn_height) {
+                                        df--;
+                                        if (df < 1) df = 1;
+                                        sprintf(df_str, "%d", df);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, df_str);
+                                    }
+                                    
+                                    // Botón + para GL
+                                    else if (mx >= input_x + input_width + 10 && mx <= input_x + input_width + btn_width + 10 &&
+                                            my >= input_y && my <= input_y + btn_height) {
+                                        df++;
+                                        if (df > 30) df = 30;
+                                        sprintf(df_str, "%d", df);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, df_str);
+                                    }
+                                    
+                                    // Botón - para Alpha
+                                    if (mx >= input_x - btn_width - 10 && mx <= input_x - 10 &&
+                                        my >= alpha_input_y && my <= alpha_input_y + btn_height) {
+                                        alpha -= 0.01;
+                                        if (alpha < 0.01) alpha = 0.01;
+                                        sprintf(alpha_str, "%.2f", alpha);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, alpha_input_y + 1, input_x + input_width - 1, alpha_input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, alpha_input_y + input_height/2, alpha_str);
+                                    }
+                                    
+                                    // Botón + para Alpha
+                                    else if (mx >= input_x + input_width + 10 && mx <= input_x + input_width + btn_width + 10 &&
+                                            my >= alpha_input_y && my <= alpha_input_y + btn_height) {
+                                        alpha += 0.01;
+                                        if (alpha > 0.99) alpha = 0.99;
+                                        sprintf(alpha_str, "%.2f", alpha);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, alpha_input_y + 1, input_x + input_width - 1, alpha_input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, alpha_input_y + input_height/2, alpha_str);
+                                    }
+                                    
+                                    // Botón buscar
+                                    else if (mx >= calc_btn_x && mx <= calc_btn_x + calc_btn_width &&
+                                            my >= calc_btn_y && my <= calc_btn_y + calc_btn_height) {
+                                        search_t_table(df, alpha);
+                                        break;
+                                    }
+                                }
+                                
+                                delay(50);
+                            }
+                        }
+                        break;
+                        
+                        case 3: // Calcular GL y Alpha de T
+                        {
+                            // Interfaz para solicitar el valor de T
+                            setcolor(APP_COLOR_TITLE);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 50, (char*)"Calcular GL y Alpha de T");
+                            
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            outtextxy(WINDOW_WIDTH/2, 100, (char*)"Introduzca el valor de T:");
+                            
+                            // Campo de entrada para T
+                            char t_value_str[20] = "2.00";
+                            double t_value = 2.0;
+                            
+                            // Dibujar campo de entrada
+                            int input_width = 100;
+                            int input_height = 30;
+                            int input_x = WINDOW_WIDTH/2 - input_width/2;
+                            int input_y = 130;
+                            
+                            setfillstyle(SOLID_FILL, WHITE);
+                            bar(input_x, input_y, input_x + input_width, input_y + input_height);
+                            rectangle(input_x, input_y, input_x + input_width, input_y + input_height);
+                            
+                            settextjustify(CENTER_TEXT, CENTER_TEXT);
+                            outtextxy(input_x + input_width/2, input_y + input_height/2, t_value_str);
+                            
+                            // Botones + y -
+                            int btn_width = 30;
+                            int btn_height = 30;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            rectangle(input_x - btn_width - 10, input_y, input_x - 10, input_y + btn_height);
+                            outtextxy(input_x - btn_width/2 - 10, input_y + btn_height/2, (char*)"-");
+                            
+                            bar(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            rectangle(input_x + input_width + 10, input_y, input_x + input_width + btn_width + 10, input_y + btn_height);
+                            outtextxy(input_x + input_width + btn_width/2 + 10, input_y + btn_height/2, (char*)"+");
+                            
+                            // Botón calcular
+                            int calc_btn_width = 120;
+                            int calc_btn_height = 40;
+                            int calc_btn_x = WINDOW_WIDTH/2 - calc_btn_width/2;
+                            int calc_btn_y = 180;
+                            
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            rectangle(calc_btn_x, calc_btn_y, calc_btn_x + calc_btn_width, calc_btn_y + calc_btn_height);
+                            outtextxy(calc_btn_x + calc_btn_width/2, calc_btn_y + calc_btn_height/2, (char*)"Calcular");
+                            
+                            // Esperar clic o entrada de usuario
+                            while (1) {
+                                if (ismouseclick(WM_LBUTTONDOWN)) {
+                                    int mx, my;
+                                    getmouseclick(WM_LBUTTONDOWN, mx, my);
+                                    
+                                    // Botón -
+                                    if (mx >= input_x - btn_width - 10 && mx <= input_x - 10 &&
+                                        my >= input_y && my <= input_y + btn_height) {
+                                        t_value -= 0.1;
+                                        if (t_value < 0.1) t_value = 0.1;
+                                        sprintf(t_value_str, "%.2f", t_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, t_value_str);
+                                    }
+                                    
+                                    // Botón +
+                                    else if (mx >= input_x + input_width + 10 && mx <= input_x + input_width + btn_width + 10 &&
+                                            my >= input_y && my <= input_y + btn_height) {
+                                        t_value += 0.1;
+                                        sprintf(t_value_str, "%.2f", t_value);
+                                        
+                                        // Actualizar visualización
+                                        setfillstyle(SOLID_FILL, WHITE);
+                                        bar(input_x + 1, input_y + 1, input_x + input_width - 1, input_y + input_height - 1);
+                                        settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                        outtextxy(input_x + input_width/2, input_y + input_height/2, t_value_str);
+                                    }
+                                    
+                                    // Botón calcular
+                                    else if (mx >= calc_btn_x && mx <= calc_btn_x + calc_btn_width &&
+                                            my >= calc_btn_y && my <= calc_btn_y + calc_btn_height) {
+                                        find_df_alpha_from_t(t_value);
+                                        break;
+                                    }
+                                }
+                                
+                                delay(50);
+                            }
+                        }
+                        break;
                     }
+                    
+                    return 1;
                 }
             }
         }
