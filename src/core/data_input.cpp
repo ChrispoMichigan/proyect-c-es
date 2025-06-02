@@ -563,3 +563,4 @@ void displayDataGrid() {
     clear_work_area();
     draw_menu();
 }
+

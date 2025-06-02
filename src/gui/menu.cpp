@@ -378,16 +378,104 @@ int handle_menu_click(int x, int y) {
                             plot_histogram(&current_data, 5);
                             return ACTION_GRAPH_HISTOGRAM;
                             
-                        case 3: // Regresión lineal (NUEVA OPCIÓN)
-                            // Placeholder hasta implementar la función
+                        case 3: //Regresion Lineal
+                            clear_work_area();
+    
+                            // Verificar si hay datos cargados
+                            if (!current_data.is_loaded || current_data.count == 0) {
+                                setcolor(RED);
+                                settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                                settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 20, (char*)"No hay datos para visualizar");
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 20, (char*)"Cargue datos primero");
+                                delay(2000);
+                                clear_work_area();
+                                return 0;
+                            }
+                            
+                            // Verificar que el número de datos sea par
+                            if (current_data.count % 2 != 0) {
+                                setcolor(RED);
+                                settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                                settextjustify(CENTER_TEXT, CENTER_TEXT);
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 40, (char*)"El numero de datos debe ser par");
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Para regresion lineal se usara:");
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"Primera mitad de datos = X");
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 80, (char*)"Segunda mitad de datos = Y");
+                                
+                                // Botón para continuar o cancelar
+                                settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                                setcolor(BLUE);
+                                outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT - 60, (char*)"Cargue un numero par de datos e intente nuevamente");
+                                delay(3000);
+                                clear_work_area();
+                                return 0;
+                            }
+                            
+                            // Mostrar información sobre el método
                             setcolor(BLUE);
                             settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 50, (char*)"Regresion Lineal");
+                            
+                            setcolor(BLACK);
+                            settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+                            settextjustify(CENTER_TEXT, TOP_TEXT);
+                            outtextxy(WINDOW_WIDTH/2, 100, (char*)"El calculo se realizara de la siguiente manera:");
+                            outtextxy(WINDOW_WIDTH/2, 130, (char*)"Primera mitad de datos = valores X");
+                            outtextxy(WINDOW_WIDTH/2, 160, (char*)"Segunda mitad de datos = valores Y");
+                            
+                            // Mostrar ejemplo
+                            settextjustify(LEFT_TEXT, TOP_TEXT);
+                            int exampleX = WINDOW_WIDTH/2 - 100;
+                            outtextxy(exampleX, 200, (char*)"Ejemplo:");
+                            outtextxy(exampleX, 230, (char*)"X    | Y");
+                            outtextxy(exampleX, 250, (char*)"dato1 | dato(n/2+1)");
+                            outtextxy(exampleX, 270, (char*)"dato2 | dato(n/2+2)");
+                            outtextxy(exampleX, 290, (char*)"...   | ...");
+                            
+                            // Botones
+                            int btnWidth = 120;
+                            int btnHeight = 40;
+                            
+                            // Botón Continuar
+                            setfillstyle(SOLID_FILL, APP_COLOR_BUTTON);
+                            bar(WINDOW_WIDTH/2 - btnWidth - 20, WINDOW_HEIGHT - 80, WINDOW_WIDTH/2 - 20, WINDOW_HEIGHT - 80 + btnHeight);
+                            setcolor(WHITE);
+                            rectangle(WINDOW_WIDTH/2 - btnWidth - 20, WINDOW_HEIGHT - 80, WINDOW_WIDTH/2 - 20, WINDOW_HEIGHT - 80 + btnHeight);
                             settextjustify(CENTER_TEXT, CENTER_TEXT);
-                            outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Regresion Lineal");
-                            outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"(Funcion en desarrollo)");
-                            delay(2000);
-                            clear_work_area();
-                            return ACTION_GRAPH_REGRESSION;
+                            outtextxy(WINDOW_WIDTH/2 - btnWidth/2 - 20, WINDOW_HEIGHT - 80 + btnHeight/2, (char*)"Continuar");
+                            
+                            // Botón Cancelar
+                            setfillstyle(SOLID_FILL, COLOR(200, 100, 100));
+                            bar(WINDOW_WIDTH/2 + 20, WINDOW_HEIGHT - 80, WINDOW_WIDTH/2 + btnWidth + 20, WINDOW_HEIGHT - 80 + btnHeight);
+                            setcolor(WHITE);
+                            rectangle(WINDOW_WIDTH/2 + 20, WINDOW_HEIGHT - 80, WINDOW_WIDTH/2 + btnWidth + 20, WINDOW_HEIGHT - 80 + btnHeight);
+                            outtextxy(WINDOW_WIDTH/2 + btnWidth/2 + 20, WINDOW_HEIGHT - 80 + btnHeight/2, (char*)"Cancelar");
+                            
+                            // Esperar clic y procesar selección
+                            while (1) {
+                                if (ismouseclick(WM_LBUTTONDOWN)) {
+                                    int x, y;
+                                    getmouseclick(WM_LBUTTONDOWN, x, y);
+                                    
+                                    // Continuar
+                                    if (x >= WINDOW_WIDTH/2 - btnWidth - 20 && x <= WINDOW_WIDTH/2 - 20 && 
+                                        y >= WINDOW_HEIGHT - 80 && y <= WINDOW_HEIGHT - 80 + btnHeight) {
+                                        plot_regression(&current_data);
+                                        return ACTION_GRAPH_REGRESSION;
+                                    }
+                                    // Cancelar
+                                    else if (x >= WINDOW_WIDTH/2 + 20 && x <= WINDOW_WIDTH/2 + btnWidth + 20 && 
+                                            y >= WINDOW_HEIGHT - 80 && y <= WINDOW_HEIGHT - 80 + btnHeight) {
+                                        clear_work_area();
+                                        return 0;
+                                    }
+                                }
+                                
+                                delay(50);
+                            }
+                            return ACTION_GRAPH_REGRESSION;     
                     }
                 }
             }

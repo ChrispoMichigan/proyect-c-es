@@ -73,7 +73,6 @@ void displayDataGrid();
 void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit);
 void plot_scatter(DataSet* data);
 void plot_histogram(DataSet* data, int num_classes);
-// NUEVO: Función para regresión lineal (será implementada después)
 void plot_regression(DataSet* data);
 
 // Funciones de estadísticos (NUEVO)

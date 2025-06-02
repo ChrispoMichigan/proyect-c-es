@@ -79,11 +79,11 @@ double find_mean(DataSet* data) {
     return sum / data->count;
 }
 
-// Dibujar ejes de coordenadas - ajustado para resolución menor
+// Función mejorada para dibujar ejes con texto más grande
 void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, double ymin, double ymax, char* xlabel, char* ylabel, char* title) {
     // Dibujar un rectángulo suave de fondo para el área del gráfico
     setfillstyle(SOLID_FILL, COLOR(250, 250, 255));
-    bar(x0-5, y0-height-5, x0+width+5, y0+5);  // Reducido margen de 10 a 5
+    bar(x0-5, y0-height-5, x0+width+5, y0+5);
     setcolor(LIGHTGRAY);
     rectangle(x0-5, y0-height-5, x0+width+5, y0+5);
     
@@ -91,16 +91,16 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
     setcolor(COLOR(220, 220, 230));
     setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);
     
-    // Líneas verticales - menos líneas para evitar saturación
-    int numXTicks = 4;  // Reducido de 5 a 4
+    // Líneas verticales
+    int numXTicks = 4;
     int xPixelStep = width / numXTicks;
     for (int i = 0; i <= numXTicks; i++) {
         int x = x0 + i * xPixelStep;
         line(x, y0, x, y0 - height);
     }
     
-    // Líneas horizontales - menos líneas para evitar saturación
-    int numYTicks = 4;  // Reducido de 5 a 4
+    // Líneas horizontales
+    int numYTicks = 4;
     int yPixelStep = height / numYTicks;
     for (int i = 0; i <= numYTicks; i++) {
         int y = y0 - i * yPixelStep;
@@ -115,44 +115,51 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
     line(x0, y0, x0 + width, y0);
     line(x0, y0, x0, y0 - height);
     
+    // MEJORA: Texto más grande para los ejes
+    
     // Marcas en eje X
     for (int i = 0; i <= numXTicks; i++) {
         int x = x0 + i * xPixelStep;
-        line(x, y0, x, y0 + 3);  // Reducido tamaño de marcas
+        line(x, y0, x, y0 + 3);
         
         char tickLabel[20];
         sprintf(tickLabel, "%.1f", xmin + i * ((xmax - xmin) / numXTicks));
         settextjustify(CENTER_TEXT, TOP_TEXT);
-        settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Aumentado de SMALL_FONT a SANS_SERIF_FONT
+        setcolor(COLOR(180, 0, 0)); // Color de texto más visible (rojo oscuro)
         outtextxy(x, y0 + 4, tickLabel);
     }
     
     // Marcas en eje Y
     for (int i = 0; i <= numYTicks; i++) {
         int y = y0 - i * yPixelStep;
-        line(x0 - 3, y, x0, y);  // Reducido tamaño de marcas
+        line(x0 - 3, y, x0, y);
         
         char tickLabel[20];
         sprintf(tickLabel, "%.1f", ymin + i * ((ymax - ymin) / numYTicks));
         settextjustify(RIGHT_TEXT, CENTER_TEXT);
-        settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
-        outtextxy(x0 - 4, y, tickLabel);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Aumentado de SMALL_FONT a SANS_SERIF_FONT
+        setcolor(COLOR(180, 0, 0)); // Color de texto más visible (rojo oscuro)
+        outtextxy(x0 - 6, y, tickLabel);
     }
     
-    // Etiquetas
+    // Etiquetas de ejes con mayor tamaño
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Tamaño aumentado
     settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
-    outtextxy(x0 + width/2, y0 + 20, xlabel);  // Reducido espacio vertical
+    setcolor(COLOR(180, 0, 0));
+    outtextxy(x0 + width/2, y0 + 25, xlabel);
     
-    settextjustify(CENTER_TEXT, BOTTOM_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);
-    outtextxy(x0 - 25, y0 - height/2, ylabel);  // Reducido espacio horizontal
+    settextjustify(RIGHT_TEXT, CENTER_TEXT);
+    setlinestyle(0, 0, 1);
+    settextstyle(SANS_SERIF_FONT, VERT_DIR, 1); // Tamaño aumentado
+    outtextxy(x0 - 35, y0 - height/2, ylabel);
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
     
-    // Título con mejor estilo
+    // Título con mejor estilo y tamaño
     settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);  // Tamaño reducido
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2); // Título más grande
     setcolor(BLUE);
-    outtextxy(x0 + width/2, y0 - height - 15, title);  // Reducido espacio vertical
+    outtextxy(x0 + width/2, y0 - height - 20, title);
 }
 
 // Visualización mejorada de diagrama de tallos y hojas con grid y desplazamiento vertical
@@ -748,3 +755,164 @@ void plot_histogram(DataSet* data, int num_classes) {
     }
     clearmouseclick(WM_LBUTTONDOWN);
 }
+
+// Función mejorada para regresión lineal con datos divididos
+void plot_regression(DataSet* data) {
+    if (data->count < 2 || !data->is_loaded) {
+        setcolor(RED);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Error: Se necesitan al menos 2 datos para la regresion");
+        delay(2000);
+        return;
+    }
+    
+    // Verificar que hay suficientes datos para formar pares X,Y
+    if (data->count % 2 != 0) {
+        setcolor(RED);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Error: Se necesita un numero par de datos");
+        outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 + 40, (char*)"La primera mitad = X, Segunda mitad = Y");
+        delay(3000);
+        return;
+    }
+    
+    clear_work_area();
+    
+    // Definir área para el gráfico
+    int margin = 60;
+    int x0 = margin;
+    int y0 = WINDOW_HEIGHT - margin;
+    int width = WINDOW_WIDTH - 2 * margin;
+    int height = WINDOW_HEIGHT - 2 * margin - 40;
+    
+    // Dividir los datos en valores X e Y
+    int pair_count = data->count / 2;
+    double x_values[MAX_DATA_POINTS/2];
+    double y_values[MAX_DATA_POINTS/2];
+    
+    for (int i = 0; i < pair_count; i++) {
+        x_values[i] = data->data[i];              // Primera mitad = X
+        y_values[i] = data->data[i + pair_count]; // Segunda mitad = Y
+    }
+    
+    // Calcular estadísticas para regresión lineal
+    double sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
+    double min_x = x_values[0], max_x = x_values[0];
+    double min_y = y_values[0], max_y = y_values[0];
+    
+    for (int i = 0; i < pair_count; i++) {
+        double x = x_values[i];
+        double y = y_values[i];
+        
+        sum_x += x;
+        sum_y += y;
+        sum_xy += x * y;
+        sum_x2 += x * x;
+        
+        min_x = (x < min_x) ? x : min_x;
+        max_x = (x > max_x) ? x : max_x;
+        min_y = (y < min_y) ? y : min_y;
+        max_y = (y > max_y) ? y : max_y;
+    }
+    
+    // Ajustar el rango para mejor visualización
+    double range_x = max_x - min_x;
+    double range_y = max_y - min_y;
+    
+    min_x -= range_x * 0.05;
+    max_x += range_x * 0.05;
+    min_y -= range_y * 0.1;
+    max_y += range_y * 0.1;
+    
+    // Calcular coeficientes de regresión lineal
+    double n = pair_count;
+    double mean_x = sum_x / n;
+    double mean_y = sum_y / n;
+    
+    double sxx = sum_x2 - (sum_x * sum_x) / n;
+    double sxy = sum_xy - (sum_x * sum_y) / n;
+    
+    double b = sxy / sxx;
+    double a = mean_y - b * mean_x;
+    
+    // Dibujar ejes y cuadrícula
+    char title[50];
+    sprintf(title, "Regresion Lineal (n=%d)", pair_count);
+    draw_axes(x0, y0, width, height, min_x, max_x, min_y, max_y, 
+              (char*)"X", (char*)"Y", title);
+    
+    // Dibujar puntos de datos
+    setcolor(APP_COLOR_DATA_POINT);
+    setfillstyle(SOLID_FILL, APP_COLOR_DATA_POINT);
+    
+    for (int i = 0; i < pair_count; i++) {
+        double x = x_values[i];
+        double y = y_values[i];
+        
+        // Convertir coordenadas de datos a coordenadas de pantalla
+        int screen_x = x0 + ((x - min_x) * width) / (max_x - min_x);
+        int screen_y = y0 - ((y - min_y) * height) / (max_y - min_y);
+        
+        // Dibujar punto
+        fillellipse(screen_x, screen_y, 4, 4); // Puntos más grandes
+    }
+    
+    // Dibujar línea de regresión
+    setlinestyle(SOLID_LINE, 0, 3);
+    setcolor(BLUE);
+    
+    double x_start = min_x;
+    double y_start = a + b * x_start;
+    double x_end = max_x;
+    double y_end = a + b * x_end;
+    
+    int start_x = x0 + ((x_start - min_x) * width) / (max_x - min_x);
+    int start_y = y0 - ((y_start - min_y) * height) / (max_y - min_y);
+    int end_x = x0 + ((x_end - min_x) * width) / (max_x - min_x);
+    int end_y = y0 - ((y_end - min_y) * height) / (max_y - min_y);
+    
+    line(start_x, start_y, end_x, end_y);
+    
+    setlinestyle(SOLID_LINE, 0, 1);
+    
+    // Mostrar ecuación de regresión y estadísticas
+    char equation[100];
+    sprintf(equation, "Ecuacion: y = %.4f + %.4fx", a, b);
+    
+    char r_squared[50];
+    // Calcular R²
+    double sum_residual_squared = 0;
+    double sum_total_squared = 0;
+    
+    for (int i = 0; i < pair_count; i++) {
+        double x = x_values[i];
+        double y = y_values[i];
+        double y_pred = a + b * x;
+        
+        sum_residual_squared += (y - y_pred) * (y - y_pred);
+        sum_total_squared += (y - mean_y) * (y - mean_y);
+    }
+    
+    double r2 = 1 - (sum_residual_squared / sum_total_squared);
+    
+    // Dibujar cuadro para la información
+    setfillstyle(SOLID_FILL, WHITE);
+    bar(x0 + 10, y0 - height + 10, x0 + 280, y0 - height + 80);
+    setcolor(BLUE);
+    rectangle(x0 + 10, y0 - height + 10, x0 + 280, y0 - height + 80);
+    
+    // Texto más grande para la ecuación
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Texto más grande
+    settextjustify(LEFT_TEXT, TOP_TEXT);
+    setcolor(BLUE);
+    outtextxy(x0 + 20, y0 - height + 20, equation);
+    outtextxy(x0 + 20, y0 - height + 45, r_squared);
+    
+    while (!ismouseclick(WM_LBUTTONDOWN)) {
+        delay(100);
+    }
+    clearmouseclick(WM_LBUTTONDOWN);
+}
+
