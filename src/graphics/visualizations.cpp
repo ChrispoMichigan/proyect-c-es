@@ -155,7 +155,7 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
     outtextxy(x0 + width/2, y0 - height - 15, title);  // Reducido espacio vertical
 }
 
-// Visualización de diagrama de tallos y hojas - ajustado para resolución menor
+// Visualización mejorada de diagrama de tallos y hojas con grid y desplazamiento vertical
 void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     if (data->count == 0 || !data->is_loaded) {
         setcolor(RED);
@@ -167,7 +167,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     
     // Título
     setcolor(APP_COLOR_TEXT);
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);  // Tamaño reducido
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
     settextjustify(CENTER_TEXT, TOP_TEXT);
     outtextxy(WINDOW_WIDTH/2, 50, (char*)"Diagrama de Tallos y Hojas");
     
@@ -182,74 +182,222 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     int min_stem = (int)(sorted[0] / stem_factor);
     int max_stem = (int)(sorted[data->count - 1] / stem_factor);
     
+    // Calcular número total de tallos
+    int total_stems = max_stem - min_stem + 1;
+    
     // Dibujar leyenda
     char legend[100];
     if (stem_digit == 1 && leaf_digit == 0) {
         sprintf(legend, "Tallo = Decenas | Hoja = Unidades");
     } else if (stem_digit == 0 && leaf_digit == -1) {
-        sprintf(legend, "Tallo = Unidades | Hoja = Decimas");
+        sprintf(legend, "Tallo = Unidades | Hoja = Décimas");
     } else {
         sprintf(legend, "Tallo: 10^%d | Hoja: 10^%d", stem_digit, leaf_digit);
     }
     
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente más pequeña
-    outtextxy(WINDOW_WIDTH/2, 70, legend);  // Posición vertical reducida
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+    outtextxy(WINDOW_WIDTH/2, 80, legend);
     
-    // Dibujar diagrama
-    settextjustify(RIGHT_TEXT, CENTER_TEXT);
-    int y = 90;  // Posición inicial más arriba
-    int spacing = 20;  // Espacio vertical reducido entre filas
+    // Definir área visible para el diagrama
+    int grid_top = 100;
+    int grid_bottom = WINDOW_HEIGHT - 80;
+    int grid_height = grid_bottom - grid_top;
     
-    for (int stem = min_stem; stem <= max_stem; stem++) {
-        char stem_str[20];
-        sprintf(stem_str, "%d |", stem);
-        outtextxy(200, y, stem_str);  // Posición X reducida
+    // Establecer exactamente 10 filas visibles por página
+    int visible_rows = 10;
+    int row_height = 24;
+    
+    // Variables para la paginación
+    int current_page = 0;
+    int total_pages = (total_stems + visible_rows - 1) / visible_rows;
+    
+    // Crear una estructura para almacenar las hojas por tallo
+    typedef struct {
+        int stem;
+        int* leaves;
+        int count;
+    } StemData;
+    
+    StemData* stems = (StemData*)malloc(total_stems * sizeof(StemData));
+    
+    // Inicializar la estructura
+    for (int i = 0; i < total_stems; i++) {
+        stems[i].stem = min_stem + i;
+        stems[i].leaves = (int*)malloc(data->count * sizeof(int)); // Máximo posible de hojas
+        stems[i].count = 0;
+    }
+    
+    // Clasificar los datos en la estructura
+    for (int i = 0; i < data->count; i++) {
+        int stem_value = (int)(sorted[i] / stem_factor);
+        int leaf_value = (int)(fmod(sorted[i], stem_factor) / leaf_factor);
+        if (leaf_value < 0) leaf_value = -leaf_value; // Manejar valores negativos
         
-        // Buscar todas las hojas para este tallo
-        int x = 210;  // Posición X reducida
-        for (int i = 0; i < data->count; i++) {
-            int curr_stem = (int)(sorted[i] / stem_factor);
-            if (curr_stem == stem) {
-                int leaf = (int)(fmod(sorted[i], stem_factor) / leaf_factor);
-                if (leaf < 0) leaf = -leaf; // Manejar valores negativos
-                
+        int stem_index = stem_value - min_stem;
+        stems[stem_index].leaves[stems[stem_index].count++] = leaf_value;
+    }
+    
+    // Función para dibujar la cuadrícula y los datos
+    auto drawStemLeafPage = [&](int page) {
+        // Limpiar área de la cuadrícula
+        setfillstyle(SOLID_FILL, WHITE);
+        bar(10, grid_top, WINDOW_WIDTH - 10, grid_bottom);
+        
+        // Dibujar encabezados de tabla
+        setfillstyle(SOLID_FILL, COLOR(220, 230, 240));
+        bar(10, grid_top, WINDOW_WIDTH - 10, grid_top + 26);
+        
+        setcolor(DARKGRAY);
+        line(10, grid_top + 26, WINDOW_WIDTH - 10, grid_top + 26);
+        line(100, grid_top, 100, grid_bottom);
+        
+        // Encabezados
+        setcolor(BLUE);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+        outtextxy(55, grid_top + 18, (char*)"Tallo");
+        outtextxy(WINDOW_WIDTH/2, grid_top + 18, (char*)"Hojas");
+        
+        // Calcular qué filas mostrar en esta página (exactamente 10 por página)
+        int start_stem = page * 10;
+        int end_stem = start_stem + 10;
+        if (end_stem > total_stems) end_stem = total_stems;
+        
+        // Dibujar filas de datos
+        setcolor(APP_COLOR_TEXT);
+        settextjustify(CENTER_TEXT, CENTER_TEXT);
+        
+        for (int i = start_stem; i < end_stem; i++) {
+            int y = grid_top + 26 + (i - start_stem) * row_height + row_height/2;
+            
+            // Dibujar línea divisoria horizontal
+            setcolor(LIGHTGRAY);
+            line(10, y + row_height/2, WINDOW_WIDTH - 10, y + row_height/2);
+            
+            // Dibujar tallo
+            setcolor(APP_COLOR_TEXT);
+            char stem_str[20];
+            sprintf(stem_str, "%d", stems[i].stem);
+            settextjustify(CENTER_TEXT, CENTER_TEXT);
+            outtextxy(55, y + 5, stem_str);
+            
+            // Dibujar hojas con formato ordenado
+            setcolor(APP_COLOR_DATA_POINT);
+            settextjustify(LEFT_TEXT, CENTER_TEXT);
+            
+            int x = 110;
+            // Ordenar las hojas
+            for (int j = 0; j < stems[i].count - 1; j++) {
+                for (int k = 0; k < stems[i].count - j - 1; k++) {
+                    if (stems[i].leaves[k] > stems[i].leaves[k+1]) {
+                        int temp = stems[i].leaves[k];
+                        stems[i].leaves[k] = stems[i].leaves[k+1];
+                        stems[i].leaves[k+1] = temp;
+                    }
+                }
+            }
+            
+            // Mostrar las hojas ordenadas con espaciado uniforme
+            for (int j = 0; j < stems[i].count; j++) {
                 char leaf_str[5];
-                sprintf(leaf_str, "%d", leaf);
-                settextjustify(LEFT_TEXT, CENTER_TEXT);
-                outtextxy(x, y, leaf_str);
+                sprintf(leaf_str, "%d", stems[i].leaves[j]);
                 
-                x += textwidth(leaf_str) + 3;  // Espacio horizontal reducido
+                if (x + textwidth(leaf_str) + 10 < WINDOW_WIDTH - 20) {
+                    outtextxy(x, y + 5, leaf_str);
+                    x += textwidth(leaf_str) + 10;  // Espaciado uniforme
+                } else {
+                    // Si no caben más, poner elipsis y terminar
+                    outtextxy(x, y + 5, (char*)"...");
+                    break;
+                }
             }
         }
         
-        y += spacing;  // Menos espacio entre líneas
+        // Mostrar información de paginación
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+        settextjustify(CENTER_TEXT, TOP_TEXT);
+        setcolor(BLUE);
         
-        // Si se está saliendo de la pantalla, ajustar
-        if (y > WINDOW_HEIGHT - 100) {
-            spacing = 15;  // Reducir aún más el espaciado si hay muchos tallos
+        char page_info[50];
+        sprintf(page_info, "Pag %d de %d", page + 1, total_pages);
+        outtextxy(WINDOW_WIDTH/2, grid_bottom + 5, page_info);
+        
+        // Dibujar botones de navegación
+        // Botón "Anterior" - solo activo si hay página anterior
+        if (page > 0) {
+            setfillstyle(SOLID_FILL, LIGHTGRAY);
+            setcolor(BLACK);
+        } else {
+            setfillstyle(SOLID_FILL, COLOR(230,230,230));
+            setcolor(DARKGRAY);
         }
+        bar(50, grid_bottom + 30, 150, grid_bottom + 60);
+        rectangle(50, grid_bottom + 30, 150, grid_bottom + 60);
+        outtextxy(100, grid_bottom + 35, (char*)"<- Anterior");
+        
+        // Botón "Siguiente" - solo activo si hay página siguiente
+        if (page < total_pages - 1) {
+            setfillstyle(SOLID_FILL, LIGHTGRAY);
+            setcolor(BLACK);
+        } else {
+            setfillstyle(SOLID_FILL, COLOR(230,230,230));
+            setcolor(DARKGRAY);
+        }
+        bar(WINDOW_WIDTH - 150, grid_bottom + 30, WINDOW_WIDTH - 50, grid_bottom + 60);
+        rectangle(WINDOW_WIDTH - 150, grid_bottom + 30, WINDOW_WIDTH - 50, grid_bottom + 60);
+        outtextxy(WINDOW_WIDTH - 100, grid_bottom + 35, (char*)"Siguiente ->");
+    };
+    
+    // Dibujar la primera página
+    drawStemLeafPage(current_page);
+    
+    // Bucle principal para manejar la paginación
+    bool done = false;
+    while (!done) {
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int x, y;
+            getmouseclick(WM_LBUTTONDOWN, x, y);
+            
+            // Botón "Anterior" - solo procesar el clic si el botón está activo
+            if (x >= 50 && x <= 150 && y >= grid_bottom + 30 && y <= grid_bottom + 60) {
+                if (current_page > 0) {
+                    current_page--;
+                    drawStemLeafPage(current_page);
+                }
+            }
+            
+            // Botón "Siguiente" - solo procesar el clic si el botón está activo
+            else if (x >= WINDOW_WIDTH - 150 && x <= WINDOW_WIDTH - 50 && 
+                     y >= grid_bottom + 30 && y <= grid_bottom + 60) {
+                if (current_page < total_pages - 1) {
+                    current_page++;
+                    drawStemLeafPage(current_page);
+                }
+            }
+            
+            // Salir con cualquier otro clic
+            else {
+                done = true;
+            }
+        }
+        
+        // También permitir salir con tecla Enter o Escape
+        if (kbhit()) {
+            char key = getch();
+            if (key == 13 || key == 27) { // Enter o Escape
+                done = true;
+            }
+        }
+        
+        delay(50);
     }
     
+    // Liberar memoria
+    for (int i = 0; i < total_stems; i++) {
+        free(stems[i].leaves);
+    }
+    free(stems);
     free(sorted);
-    
-    // Estadísticas descriptivas - compactas para pantalla pequeña
-    int stats_y = WINDOW_HEIGHT - 95;  // Posicionadas más abajo
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    settextstyle(SMALL_FONT, HORIZ_DIR, 5);  // Fuente pequeña
-    
-    char stats[100];
-    sprintf(stats, "Datos: %d | Min: %.2f | Max: %.2f | Media: %.2f", 
-            data->count, find_min(data), find_max(data), find_mean(data));
-    outtextxy(10, stats_y, stats);  // Una sola línea con toda la info
-    
-    // Esperar un clic para continuar
-    settextjustify(LEFT_TEXT, TOP_TEXT);
-    outtextxy(10, WINDOW_HEIGHT - 20, (char*)"Clic para continuar...");
-    
-    while (!ismouseclick(WM_LBUTTONDOWN)) {
-        delay(100);
-    }
-    clearmouseclick(WM_LBUTTONDOWN);
 }
 
 // Visualización de gráfica de puntos (dispersión) - ajustada para resolución menor

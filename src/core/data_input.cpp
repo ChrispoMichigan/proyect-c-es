@@ -301,8 +301,6 @@ int file_dialog(char* filename) {
     OPENFILENAME ofn;                // Estructura para el diálogo de Windows
     char szFile[MAX_FILENAME_LEN] = "";   // Buffer para el nombre de archivo inicializado vacío
     
-    printf("Inicializando diálogo de selección de archivo...\n");
-    
     // Inicializar la estructura OPENFILENAME
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
@@ -315,22 +313,17 @@ int file_dialog(char* filename) {
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    
-    printf("Mostrando diálogo de selección...\n");
     // Mostrar el diálogo de selección de archivo
     BOOL result = GetOpenFileName(&ofn);
     
     if (result) {
-        printf("Archivo seleccionado: %s\n", ofn.lpstrFile);
         // Copiar el nombre de archivo seleccionado (incluida la ruta)
         strcpy(filename, ofn.lpstrFile);
         return 1; // Éxito
     } else {
         DWORD error = CommDlgExtendedError();
         if (error) {
-            printf("Error en GetOpenFileName: 0x%lX\n", error);
         } else {
-            printf("Usuario canceló la selección\n");
         }
         return 0; // Cancelado o error
     }
@@ -354,13 +347,11 @@ void load_data_from_file() {
     settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
     settextjustify(CENTER_TEXT, CENTER_TEXT);
     outtextxy(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, (char*)"Cargando datos...");
-    
-    printf("Intentando abrir: %s\n", filename);
+
     
     // Usar el modo "rb" (binary read) para evitar problemas de codificación
     file = fopen(filename, "rb");
     if (!file) {
-        printf("Error al abrir el archivo: %s\n", strerror(errno));
         clear_work_area();
         setcolor(RED);
         settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
@@ -372,24 +363,16 @@ void load_data_from_file() {
         return;
     }
     
-    printf("Archivo abierto exitosamente\n");
-    
     // Leer y mostrar el contenido bruto del archivo para diagnóstico
     char buffer[1024];
     int bytes_read;
     int total_bytes = 0;
     
-    printf("Contenido del archivo:\n");
-    printf("--------------------\n");
-    
     // Leer hasta 1024 bytes del archivo
     while ((bytes_read = fread(buffer, 1, sizeof(buffer) - 1, file)) > 0) {
         buffer[bytes_read] = '\0'; // Null-terminar
-        printf("%s", buffer);
         total_bytes += bytes_read;
     }
-    printf("\n--------------------\n");
-    printf("Total bytes leídos: %d\n", total_bytes);
     
     // Volver al inicio del archivo
     rewind(file);
@@ -409,15 +392,12 @@ void load_data_from_file() {
     
     char* file_contents = (char*)malloc(file_size + 1);
     if (!file_contents) {
-        printf("Error: No se pudo asignar memoria para el archivo\n");
         fclose(file);
         return;
     }
     
     fread(file_contents, 1, file_size, file);
     file_contents[file_size] = '\0';
-    
-    printf("Archivo completo leído en memoria:\n%s\n", file_contents);
     
     // Ahora procesamos los números utilizando strtod para mayor robustez
     char* end_ptr;
@@ -441,10 +421,8 @@ void load_data_from_file() {
         
         // Añadir valor al conjunto de datos
         if (current_data.count < MAX_DATA_POINTS) {
-            printf("Valor leído: %.2f\n", value);
             current_data.data[current_data.count++] = value;
         } else {
-            printf("Límite de datos alcanzado\n");
             break;
         }
         
@@ -459,8 +437,6 @@ void load_data_from_file() {
     
     free(file_contents);
     fclose(file);
-    
-    printf("Total valores numéricos encontrados: %d\n", current_data.count);
     
     // Si no se leyó ningún dato, mostrar error
     if (current_data.count == 0) {
@@ -579,10 +555,6 @@ void displayDataGrid() {
                 }
             }
             
-            // Cualquier otro clic cierra la pantalla
-            if (y > WINDOW_HEIGHT - 40) {
-                done = true;
-            }
         }
         
         delay(50);
