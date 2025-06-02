@@ -6,15 +6,14 @@
 
 // Función para limpiar el área de trabajo
 void clear_work_area() {
-    // Fondo degradado suave - optimizado para 640x480
     for (int i = 40; i < WINDOW_HEIGHT; i++) {
-        setcolor(COLOR(245, 245, 252 - (i/10)));  // Ajustado divisor para mejor degradado
+        setcolor(COLOR(245, 245, 252 - (i/10)));  
         line(0, i, WINDOW_WIDTH, i);
     }
     
     // Borde sutil
     setcolor(LIGHTGRAY);
-    rectangle(5, 45, WINDOW_WIDTH-5, WINDOW_HEIGHT-5);  // Reducido margen de 10 a 5
+    rectangle(5, 45, WINDOW_WIDTH-5, WINDOW_HEIGHT-5);
 }
 
 // Ordenar datos para visualizaciones
@@ -115,8 +114,6 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
     line(x0, y0, x0 + width, y0);
     line(x0, y0, x0, y0 - height);
     
-    // MEJORA: Texto más grande para los ejes
-    
     // Marcas en eje X
     for (int i = 0; i <= numXTicks; i++) {
         int x = x0 + i * xPixelStep;
@@ -125,8 +122,8 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
         char tickLabel[20];
         sprintf(tickLabel, "%.1f", xmin + i * ((xmax - xmin) / numXTicks));
         settextjustify(CENTER_TEXT, TOP_TEXT);
-        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Aumentado de SMALL_FONT a SANS_SERIF_FONT
-        setcolor(COLOR(180, 0, 0)); // Color de texto más visible (rojo oscuro)
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); 
+        setcolor(COLOR(180, 0, 0)); 
         outtextxy(x, y0 + 4, tickLabel);
     }
     
@@ -138,26 +135,26 @@ void draw_axes(int x0, int y0, int width, int height, double xmin, double xmax, 
         char tickLabel[20];
         sprintf(tickLabel, "%.1f", ymin + i * ((ymax - ymin) / numYTicks));
         settextjustify(RIGHT_TEXT, CENTER_TEXT);
-        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Aumentado de SMALL_FONT a SANS_SERIF_FONT
-        setcolor(COLOR(180, 0, 0)); // Color de texto más visible (rojo oscuro)
+        settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
+        setcolor(COLOR(180, 0, 0)); 
         outtextxy(x0 - 6, y, tickLabel);
     }
     
-    // Etiquetas de ejes con mayor tamaño
-    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); // Tamaño aumentado
+    // Etiquetas de ejes 
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1); 
     settextjustify(CENTER_TEXT, TOP_TEXT);
     setcolor(COLOR(180, 0, 0));
     outtextxy(x0 + width/2, y0 + 25, xlabel);
     
     settextjustify(RIGHT_TEXT, CENTER_TEXT);
     setlinestyle(0, 0, 1);
-    settextstyle(SANS_SERIF_FONT, VERT_DIR, 1); // Tamaño aumentado
+    settextstyle(SANS_SERIF_FONT, VERT_DIR, 1);
     outtextxy(x0 - 35, y0 - height/2, ylabel);
     settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 1);
     
     // Título con mejor estilo y tamaño
     settextjustify(CENTER_TEXT, TOP_TEXT);
-    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2); // Título más grande
+    settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 2);
     setcolor(BLUE);
     outtextxy(x0 + width/2, y0 - height - 20, title);
 }
@@ -230,7 +227,7 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
     // Inicializar la estructura
     for (int i = 0; i < total_stems; i++) {
         stems[i].stem = min_stem + i;
-        stems[i].leaves = (int*)malloc(data->count * sizeof(int)); // Máximo posible de hojas
+        stems[i].leaves = (int*)malloc(data->count * sizeof(int));
         stems[i].count = 0;
     }
     
@@ -330,7 +327,6 @@ void plot_stem_leaf(DataSet* data, int stem_digit, int leaf_digit) {
         outtextxy(WINDOW_WIDTH/2, grid_bottom + 5, page_info);
         
         // Dibujar botones de navegación
-        // Botón "Anterior" - solo activo si hay página anterior
         if (page > 0) {
             setfillstyle(SOLID_FILL, LIGHTGRAY);
             setcolor(BLACK);
@@ -424,10 +420,10 @@ void plot_scatter(DataSet* data) {
     outtextxy(50, 50, (char*)"Graficas de puntos");
     
     // Área para el gráfico - ajustada para maximizar el área visible
-    int margin_left = 60;    // Reducido para más espacio horizontal
-    int margin_right = 30;   // Reducido para más espacio horizontal
-    int margin_top = 100;    // Ajustado para dar más espacio arriba
-    int margin_bottom = 80;  // Ajustado para dar más espacio abajo
+    int margin_left = 60;    
+    int margin_right = 30; 
+    int margin_top = 100;  
+    int margin_bottom = 80;  
     
     int x0 = margin_left; // Origen X (izquierda)
     int y0 = WINDOW_HEIGHT - margin_bottom; // Origen Y (abajo)
@@ -448,7 +444,7 @@ void plot_scatter(DataSet* data) {
         max_val += 1;
     }
     
-    // Dibujar fondo del gráfico - MUCHO MÁS GRANDE
+    // Dibujar fondo del gráfico
     setfillstyle(SOLID_FILL, WHITE);
     bar(x0-10, y0-height-10, x0+width+10, y0+10);
     setcolor(BLACK);
@@ -457,21 +453,21 @@ void plot_scatter(DataSet* data) {
     // Dibujar eje horizontal
     line(x0, y0, x0 + width, y0);
     
-    // Marcas y etiquetas en el eje X - TAMAÑO DE FUENTE AUMENTADO
+    // Marcas y etiquetas en el eje X 
     int numXTicks = 6;  // Número de marcas en el eje X
     int xPixelStep = width / numXTicks;
     
     // Crear marcas más visibles
-    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1); // Fuente más grande y clara
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 1);
     for (int i = 0; i <= numXTicks; i++) {
         int x = x0 + i * xPixelStep;
-        line(x, y0, x, y0 + 5);  // Marca
+        line(x, y0, x, y0 + 5); 
         
         char tickLabel[20];
         double value = min_val + i * ((max_val - min_val) / numXTicks);
         sprintf(tickLabel, "%.0f", value);
         settextjustify(CENTER_TEXT, TOP_TEXT);
-        outtextxy(x, y0 + 10, tickLabel); // Mayor separación para los números
+        outtextxy(x, y0 + 10, tickLabel); 
     }
     
     // Estructura para contar la frecuencia de cada valor
@@ -656,7 +652,7 @@ void plot_histogram(DataSet* data, int num_classes) {
     
     // Preparar área para el gráfico
     setfillstyle(SOLID_FILL, COLOR(248, 248, 255)); // Fondo suave
-    bar(x0-10, y0-height-10, x0+width+10, y0+40); // Área extendida para las etiquetas
+    bar(x0-10, y0-height-10, x0+width+10, y0+40); 
     setcolor(LIGHTGRAY);
     rectangle(x0-10, y0-height-10, x0+width+10, y0+40);
     
